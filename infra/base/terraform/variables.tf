@@ -259,3 +259,31 @@ variable "aibrix_stack_version" {
   type        = string
   default     = "v0.2.1"
 }
+
+# Flag to enable KAI scheduler
+variable "enable_kai_scheduler" {
+  description = "Enable KAI scheduler addon"
+  type        = bool
+  default     = false
+}
+
+# KAI scheduler version
+variable "kai_scheduler_version" {
+  description = "KAI scheduler default version"
+  type        = string
+  default     = "v0.7.2"
+}
+
+# KAI scheduler cluster autoscaling capability
+variable "kai_scheduler_cluster_autoscaling" {
+  description = "KAI scheduler cluster autoscaling capability"
+  type        = string
+  default     = false
+}
+
+# KAI scheduler gpusharing capability
+variable "kai_scheduler_gpusharing" {
+  description = "KAI scheduler gpusharing capability"
+  type        = string
+  default     = false
+}

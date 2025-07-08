@@ -1,0 +1,38 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kai-scheduler
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: ghcr.io/nvidia/kai-scheduler
+    chart: kai-scheduler
+    targetRevision: ${kai_scheduler_version}
+    helm:
+      values: |
+        global:
+          clusterAutoscaling: ${kai_scheduler_autoscaling}
+          gpuSharing: ${kai_scheduler_gpusharing}
+          nodeSelector:
+            NodeGroupType: core
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kai-scheduler
+  syncPolicy:
+    syncOptions:
+      - ServerSideApply=true
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kai-test-1
+  labels:
+    app: kai-test-1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kai-test-1
+  template:
+    metadata:
+      labels:
+        app: kai-test-1
+        kai.scheduler/queue: default
+    spec:
+      schedulerName: kai-scheduler
+      containers:
+      - name: app
+        image: ubuntu:22.04
+        command: ["bash", "-c"]
+        args: ["nvidia-smi -L; trap 'exit 0' TERM; sleep 9999 & wait"]
+        resources:
+          limits:
+            nvidia.com/gpu: 1
+      tolerations:
+      - key: "nvidia.com/gpu"
+        operator: "Exists"
+        effect: "NoSchedule"
+      nodeSelector:
+        gpuType: l4

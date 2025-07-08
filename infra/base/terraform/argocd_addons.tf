@@ -41,3 +41,16 @@ resource "kubectl_manifest" "nvidia_dcgm_helm" {
     module.eks_blueprints_addons
   ]
 }
+
+resource "kubectl_manifest" "kai_scheduler_helm" {
+  count = var.enable_kai_scheduler ? 1 : 0
+  yaml_body = templatefile("${path.module}/argocd-addons/kai-scheduler.yaml", {
+    kai_scheduler_version     = var.kai_scheduler_version,
+    kai_scheduler_autoscaling = var.kai_scheduler_cluster_autoscaling,
+    kai_scheduler_gpusharing  = var.kai_scheduler_gpusharing
+  })
+
+  depends_on = [
+    module.eks_blueprints_addons
+  ]
+}

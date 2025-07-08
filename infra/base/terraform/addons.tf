@@ -259,9 +259,12 @@ module "data_addons" {
         gfd:
           enabled: true
         nfd:
+          master:
+            nodeSelector:
+              NodeGroupType: core
           gc:
             nodeSelector:
-              accelerator: nvidia
+              NodeGroupType: core
           topologyUpdater:
             nodeSelector:
               accelerator: nvidia
@@ -272,7 +275,6 @@ module "data_addons" {
               - key: nvidia.com/gpu
                 operator: Exists
                 effect: NoSchedule
-              - operator: "Exists"
       EOT
     ]
   }
@@ -356,6 +358,7 @@ module "data_addons" {
         labels:
           - instanceType: g6-gpu-karpenter
           - type: karpenter
+          - accelerator: nvidia
           - gpuType: l4
         taints:
           - key: nvidia.com/gpu

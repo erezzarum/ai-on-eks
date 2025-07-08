@@ -1,5 +1,9 @@
 #!/bin/bash
 
+set -o errexit
+set -o pipefail
+set -o nounset
+
 # List of Terraform modules to apply in sequence
 targets=(
   "module.vpc"

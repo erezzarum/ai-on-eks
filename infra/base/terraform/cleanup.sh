@@ -1,14 +1,22 @@
 #!/bin/bash
 
+set -o errexit
+set -o pipefail
+set -o nounset
+
 TERRAFORM_COMMAND="terraform destroy -auto-approve"
 CLUSTERNAME="ai-stack"
 REGION="region"
+
 # Check if blueprint.tfvars exists
 if [ -f "../blueprint.tfvars" ]; then
   TERRAFORM_COMMAND="$TERRAFORM_COMMAND -var-file=../blueprint.tfvars"
-  CLUSTERNAME="$(echo "var.name" | terraform console -var-file=../blueprint.tfvars | tr -d '"')"
-  REGION="$(echo "var.region" | terraform console -var-file=../blueprint.tfvars | tr -d '"')"
+  TF_CLI_ARGS_console="-var-file=../blueprint.tfvars"
 fi
+
+CLUSTERNAME="$(echo "var.name" | terraform console | tr -d '"')"
+REGION="$(echo "var.region" | terraform console | tr -d '"')"
+
 echo "Destroying Terraform $CLUSTERNAME"
 echo "Destroying RayService..."
 
@@ -19,8 +27,9 @@ terraform output -raw configure_kubectl > "$TMPFILE"
 if [[ ! $(cat $TMPFILE) == *"No outputs found"* ]]; then
   echo "No outputs found, skipping kubectl delete"
   source "$TMPFILE"
-  kubectl delete rayjob -A --all
-  kubectl delete rayservice -A --all
+  kubectl delete rayjob -A --all || true
+  kubectl delete rayservice -A --all || true
+  kubectl -n ingress-nginx delete svc ingress-nginx-controller || true
 fi
 
 
