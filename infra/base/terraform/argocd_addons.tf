@@ -7,12 +7,22 @@ resource "kubectl_manifest" "ai_ml_observability_yaml" {
   ]
 }
 
-resource "kubectl_manifest" "kuberay_operator" {
+resource "kubectl_manifest" "kuberay_operator_crds" {
   count     = var.enable_kuberay_operator ? 1 : 0
-  yaml_body = file("${path.module}/argocd-addons/kuberay-operator.yaml")
+  yaml_body = templatefile("${path.module}/argocd-addons/kuberay-operator-crds.yaml", { kuberay_version = var.kuberay_operator_version })
 
   depends_on = [
     helm_release.argocd
+  ]
+}
+
+resource "kubectl_manifest" "kuberay_operator" {
+  count     = var.enable_kuberay_operator ? 1 : 0
+  yaml_body = templatefile("${path.module}/argocd-addons/kuberay-operator.yaml", { kuberay_version = var.kuberay_operator_version })
+
+  depends_on = [
+    helm_release.argocd,
+    kubectl_manifest.kuberay_operator_crds
   ]
 }
 
