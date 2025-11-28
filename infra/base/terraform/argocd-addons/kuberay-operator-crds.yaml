@@ -1,29 +1,25 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: kuberay-operator
+  name: kuberay-operator-crds
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   source:
-    repoURL: https://ray-project.github.io/kuberay-helm/
-    chart: kuberay-operator
-    targetRevision: ${kuberay_version}
-    helm:
-      skipCrds: true
+    repoURL: https://github.com/ray-project/kuberay
+    targetRevision: v${kuberay_version}
+    path: helm-chart/kuberay-operator/crds
   destination:
     server: https://kubernetes.default.svc
-    namespace: kuberay-operator
+    namespace: default
   syncPolicy:
     syncOptions:
       - ServerSideApply=true
-      - CreateNamespace=true
-      - PrunePropagationPolicy=foreground
-      - PruneLast=true
+      - Replace=true
     automated:
-      prune: true
+      prune: false
       selfHeal: true
     retry:
       limit: 5
