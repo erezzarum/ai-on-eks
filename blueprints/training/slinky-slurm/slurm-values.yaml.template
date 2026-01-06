@@ -95,7 +95,7 @@ nodesets:
           mountPath: /dev/shm
     podSpec:
       nodeSelector:
-        instanceType: g5-gpu-karpenter
+        karpenter.sh/nodepool: g5-nvidia
         kubernetes.io/os: linux
       tolerations:
         - key: "nvidia.com/gpu"
