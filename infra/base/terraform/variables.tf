@@ -183,6 +183,11 @@ variable "enable_ai_ml_observability_stack" {
   type        = bool
   default     = false
 }
+variable "observability_mcp_enabled" {
+  description = "Enable AI/ML observability addon MCP servers"
+  type        = bool
+  default     = false
+}
 variable "enable_external_dns" {
   description = "Enable External DNS"
   type        = bool
