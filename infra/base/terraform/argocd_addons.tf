@@ -265,6 +265,16 @@ resource "kubectl_manifest" "milvus_yaml" {
   ]
 }
 
+# Selenium Grid
+resource "kubectl_manifest" "selenium_grid_yaml" {
+  count     = var.enable_selenium_grid ? 1 : 0
+  yaml_body = file("${path.module}/argocd-addons/selenium-grid.yaml")
+
+  depends_on = [
+    helm_release.argocd
+  ]
+}
+
 # MCP Gateway Registry
 resource "kubectl_manifest" "mcp_gateway_registry_yaml" {
   count = var.enable_mcp_gateway_registry ? 1 : 0

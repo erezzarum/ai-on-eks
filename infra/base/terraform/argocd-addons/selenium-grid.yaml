@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: selenium-grid
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://www.selenium.dev/docker-selenium
+    chart: selenium-grid
+    targetRevision: 0.52.0
+    helm:
+      parameters:
+        - name: chromeNode.enabled
+          value: "true"
+        - name: chromeNode.replicas
+          value: "1"
+        - name: firefoxNode.enabled
+          value: "true"
+        - name: firefoxNode.replicas
+          value: "1"
+        - name: edgeNode.enabled
+          value: "true"
+        - name: edgeNode.replicas
+          value: "1"
+        - name: ingress.enabled
+          value: "false"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: selenium-grid
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+    automated:
+      prune: true
+      selfHeal: true

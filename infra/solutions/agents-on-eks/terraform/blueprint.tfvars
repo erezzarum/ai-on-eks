@@ -4,6 +4,7 @@ enable_gitlab               = true        # Enable Gitlab for source control
 enable_external_dns         = true        # Enable External DNS to sync Route53 records
 enable_milvus               = true        # Enable Milvus for persistent memory storage
 enable_mcp_gateway_registry = true        # Enable MCP Gateway Registry
+enable_selenium_grid        = true        # Enable Selenium Grid for web browsing
 max_user_namespaces         = 16384       # Enables docker builds on bottlerocket
 acm_certificate_domain      = ""          # Update with domain (ex agents.example.com)
 allowed_inbound_cidrs       = "0.0.0.0/0" # Set the CIDR range allowed through the load balancer. Should include your IP as well as the IP of the gitlab runner node
