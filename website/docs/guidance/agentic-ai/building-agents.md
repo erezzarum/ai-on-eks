@@ -250,7 +250,7 @@ If your agent needs access to AWS services (Bedrock, S3, etc.),
 use [Pod Identity](https://docs.aws.amazon.com/eks/latest/userguide/pod-identities.html) rather than passing IAM
 credentials as environment variables. The Pod Identity agent is already running in the environment.
 
-When creating the Pod Identity Role, make sure to add Bedrock permissions to the role. 
+When creating the Pod Identity Role, make sure to add Bedrock permissions to the role.
 
 Redeploy the agent to pick up the new credentials:
 
