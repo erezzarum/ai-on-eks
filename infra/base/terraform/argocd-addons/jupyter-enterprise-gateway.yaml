@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: jupyter-enterprise-gateway
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/jupyter-server/enterprise_gateway.git
+    path: etc/kubernetes/helm/enterprise-gateway
+    targetRevision: v3.2.3
+    helm: {}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: enterprise-gateway
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

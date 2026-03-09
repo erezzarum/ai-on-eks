@@ -265,6 +265,16 @@ resource "kubectl_manifest" "milvus_yaml" {
   ]
 }
 
+# Jupyter Enterprise Gateway
+resource "kubectl_manifest" "jupyter_enterprise_gateway_yaml" {
+  count     = var.enable_jupyter_enterprise_gateway ? 1 : 0
+  yaml_body = file("${path.module}/argocd-addons/jupyter-enterprise-gateway.yaml")
+
+  depends_on = [
+    helm_release.argocd
+  ]
+}
+
 # MCP Gateway Registry
 resource "kubectl_manifest" "mcp_gateway_registry_yaml" {
   count = var.enable_mcp_gateway_registry ? 1 : 0
