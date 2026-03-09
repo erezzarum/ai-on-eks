@@ -409,6 +409,13 @@ variable "enable_milvus" {
   default     = false
 }
 
+# Jupyter Enterprise Gateway
+variable "enable_jupyter_enterprise_gateway" {
+  description = "Enable Jupyter Enterprise Gateway addon"
+  type        = bool
+  default     = false
+}
+
 # MCP Gateway Registry
 variable "enable_mcp_gateway_registry" {
   description = "Enable MCP Gateway Registry addon"
