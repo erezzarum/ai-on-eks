@@ -423,6 +423,13 @@ variable "enable_mcp_gateway_registry" {
   default     = false
 }
 
+# Selenium Grid
+variable "enable_selenium_grid" {
+  description = "Enable Selenium Grid addon"
+  type        = bool
+  default     = false
+}
+
 # Jupyterhub Specific Variables
 
 # NOTE: You need to use private domain or public domain name with ACM certificate
