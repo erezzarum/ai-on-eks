@@ -16,7 +16,7 @@ resource "kubectl_manifest" "mistral_model_download" {
     spec:
       backoffLimit: 3
       activeDeadlineSeconds: 7200
-      ttlSecondsAfterFinished: 86400 
+      ttlSecondsAfterFinished: 86400
       template:
         spec:
           restartPolicy: Never
@@ -47,7 +47,7 @@ resource "kubectl_manifest" "mistral_model_download" {
                   if file_path.is_file():
                       # Skip .cache directories and their contents
                       if '.cache' in file_path.parts:
-                          continue    
+                          continue
                       s3_key = f"Ministral-3-8B-Instruct-2512/{file_path.relative_to(local_dir)}"
                       print(f"Uploading {file_path.name}...")
                       s3.upload_file(str(file_path), bucket, s3_key)
