@@ -12,7 +12,7 @@ The workshop deploys:
 - **Amazon Managed Prometheus (AMP)** for metrics collection
 - **Grafana** with pre-built dashboards for vLLM, Ray Serve, and DCGM
 - **S3 bucket** (`genai-models-<account-id>`) for model storage via Mountpoint S3 CSI driver
-- **Mistral-7B-Instruct-v0.3** downloaded from HuggingFace and stored in S3
+- **Ministral-3-8B-Instruct-2512** downloaded from HuggingFace and stored in S3
 - **kube-prometheus-stack** for cluster observability
 
 ---
@@ -71,7 +71,7 @@ This will:
 2. Add workshop-specific configs on top of the base
 3. Run `terraform init` and `terraform apply`
 
-> Deployment takes ~20-25 minutes. The Mistral-7B model download job runs inside the cluster after provisioning.
+> Deployment takes ~20-25 minutes. The model download job runs inside the cluster after provisioning.
 
 ### 4. Configure kubectl
 
