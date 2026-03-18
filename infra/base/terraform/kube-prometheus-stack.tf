@@ -90,6 +90,7 @@ resource "kubernetes_secret" "grafana_admin_alias" {
 resource "kubectl_manifest" "kube_prometheus_stack" {
   count = var.enable_kube_prometheus_stack ? 1 : 0
   yaml_body = templatefile("${path.module}/argocd-addons/kube-prometheus-stack.yaml", {
+    version          = var.kube_prometheus_stack_version
     user_values_yaml = indent(8, local.kube_prometheus_values)
     namespace        = var.kube_prometheus_stack_namespace
   })
