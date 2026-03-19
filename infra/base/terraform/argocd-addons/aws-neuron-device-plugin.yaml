@@ -15,10 +15,15 @@ spec:
       values: |
         scheduler:
           enabled: true
+          customScheduler:
+            fullnameOverride: neuron-scheduler
+        npd:
+          fullnameOverride: neuron-npd
+          namespaceOverride: null
 
   destination:
     server: https://kubernetes.default.svc
-    namespace: kube-system
+    namespace: neuron-device-plugin
   syncPolicy:
     syncOptions:
       - CreateNamespace=true

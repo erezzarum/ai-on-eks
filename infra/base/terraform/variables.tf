@@ -124,12 +124,12 @@ variable "enable_aws_efa_k8s_device_plugin" {
 variable "aws_efa_k8s_device_plugin_version" {
   description = "AWS EFA K8s Device Plugin chart version"
   type        = string
-  default     = "0.5.21"
+  default     = "0.5.22"
 }
 variable "enable_aws_neuron_device_plugin" {
   description = "Enable AWS Neuron Device Plugin"
   type        = bool
-  default     = false
+  default     = true
 }
 variable "aws_neuron_device_plugin_version" {
   description = "AWS Neuron Device Plugin chart version"
@@ -284,6 +284,11 @@ variable "enable_mpi_operator" {
   description = "Flag to enable the MPI Operator deployment"
   type        = bool
   default     = false
+}
+variable "mpi_operator_version" {
+  description = "MPI Operator chart version"
+  type        = string
+  default     = "0.8.0"
 }
 
 # AWS Load Balancer Controller Variables

@@ -176,8 +176,10 @@ resource "kubectl_manifest" "slurm_operator_yaml" {
 
 # MPI Operator
 resource "kubectl_manifest" "mpi_operator" {
-  count     = var.enable_mpi_operator ? 1 : 0
-  yaml_body = file("${path.module}/argocd-addons/mpi-operator.yaml")
+  count = var.enable_mpi_operator ? 1 : 0
+  yaml_body = templatefile("${path.module}/argocd-addons/mpi-operator.yaml", {
+    version = var.mpi_operator_version
+  })
 
   depends_on = [
     helm_release.argocd,
