@@ -16,13 +16,13 @@ spec:
         - name: chromeNode.enabled
           value: "true"
         - name: chromeNode.replicas
-          value: "1"
+          value: "3"
         - name: firefoxNode.enabled
-          value: "true"
+          value: "false"
         - name: firefoxNode.replicas
           value: "1"
         - name: edgeNode.enabled
-          value: "true"
+          value: "false"
         - name: edgeNode.replicas
           value: "1"
         - name: ingress.enabled
