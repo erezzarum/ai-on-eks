@@ -2,7 +2,7 @@
 check_s3_bucket() {
   local bucket_name="${TF_STATE_BUCKET:-$1}"
   local region="${AWS_REGION:-$2}"
-  if aws s3api head-bucket --bucket "$bucket_name" --region "$region" 2>/dev/null; then
+  if aws s3api head-bucket --bucket "$bucket_name" --region "$region" >/dev/null; then
     return 0
   else
     return 1
