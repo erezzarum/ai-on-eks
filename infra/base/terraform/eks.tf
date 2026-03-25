@@ -106,7 +106,7 @@ module "eks" {
       # NOTE: Don't use this volume for ML workloads
       block_device_mappings = {
         xvda = {
-          device_name = "/dev/xvda"
+          device_name = "/dev/xvdb"
           ebs = {
             volume_size = 100
             volume_type = "gp3"
