@@ -20,10 +20,8 @@ echo "Destroying RayService..."
 TMPFILE=$(mktemp)
 terraform output -raw configure_kubectl > "$TMPFILE"
 # check if TMPFILE contains the string "No outputs found"
-KUBECTL_CONFIGURED=false
 if [[ ! $(cat $TMPFILE) == *"No outputs found"* ]]; then
   source "$TMPFILE"
-  KUBECTL_CONFIGURED=true
   kubectl delete rayjob -A --all
   kubectl delete rayservice -A --all
 else
@@ -48,26 +46,6 @@ if [ ${#targets[@]} -gt 0 ]; then
   else
     echo "FAILED: Terraform destroy of kubectl_manifest resources failed"
     exit 1
-  fi
-
-  if [ "$KUBECTL_CONFIGURED" = true ]; then
-    MAX_WAIT=600
-    INTERVAL=15
-    ELAPSED=0
-    echo "Waiting for all worker nodes to terminate before destroying infrastructure..."
-    while [ $ELAPSED -lt $MAX_WAIT ]; do
-      NODE_COUNT=$(kubectl get nodes --no-headers 2>/dev/null | wc -l)
-      if [ "$NODE_COUNT" -eq 0 ]; then
-        echo "All nodes terminated."
-        break
-      fi
-      echo "  $NODE_COUNT node(s) still present, waiting ${INTERVAL}s... (${ELAPSED}s/${MAX_WAIT}s)"
-      sleep $INTERVAL
-      ELAPSED=$((ELAPSED + INTERVAL))
-    done
-    if [ $ELAPSED -ge $MAX_WAIT ]; then
-      echo "WARNING: Timed out after ${MAX_WAIT}s waiting for nodes to terminate. Proceeding with destroy."
-    fi
   fi
 fi
 

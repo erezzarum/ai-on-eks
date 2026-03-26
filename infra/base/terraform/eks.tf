@@ -426,6 +426,7 @@ data "kubectl_path_documents" "automode_manifests_dummy" {
 resource "kubectl_manifest" "automode_manifests" {
   count     = var.enable_eks_auto_mode ? length(data.kubectl_path_documents.automode_manifests_dummy[0].documents) : 0
   yaml_body = element(data.kubectl_path_documents.automode_manifests[0].documents, count.index)
+  wait      = true
 }
 ################################################################################
 # EKS Auto Mode Ingress
