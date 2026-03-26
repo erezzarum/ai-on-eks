@@ -40,7 +40,7 @@ spec:
           operator: In
           values:
             - linux
-      terminationGracePeriod: 24h0m0s
+      terminationGracePeriod: 2h0m0s
 ---
 apiVersion: karpenter.sh/v1
 kind: NodePool
@@ -87,7 +87,7 @@ spec:
       taints:
         - effect: NoSchedule
           key: CriticalAddonsOnly
-      terminationGracePeriod: 24h0m0s
+      terminationGracePeriod: 2h0m0s
 ---
 apiVersion: eks.amazonaws.com/v1
 kind: NodeClass
