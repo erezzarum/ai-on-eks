@@ -36,5 +36,5 @@ spec:
           values:
             - on-demand
             - spot
-      terminationGracePeriod: 2h
+      terminationGracePeriod: 48h
   weight: 100

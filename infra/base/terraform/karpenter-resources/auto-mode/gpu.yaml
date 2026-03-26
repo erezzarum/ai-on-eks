@@ -35,7 +35,7 @@ spec:
         - effect: NoSchedule
           key: nvidia.com/gpu
           value: Exists
-      terminationGracePeriod: 2h0m0s
+      terminationGracePeriod: 24h0m0s
 ---
 apiVersion: eks.amazonaws.com/v1
 kind: NodeClass
