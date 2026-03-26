@@ -136,6 +136,28 @@ terraform_apply() {
     fi
 }
 
+wait_for_nodes_terminated() {
+  local max_wait="${1:-600}" # default 10 minutes
+  local interval=15
+  local elapsed=0
+
+  echo "Waiting for all worker nodes to terminate before destroying infrastructure..."
+
+  while [ $elapsed -lt $max_wait ]; do
+    node_count=$(kubectl get nodes --no-headers 2>/dev/null | wc -l)
+    if [ "$node_count" -eq 0 ]; then
+      echo "All nodes terminated."
+      return 0
+    fi
+    echo "  $node_count node(s) still present, waiting ${interval}s... (${elapsed}s/${max_wait}s)"
+    sleep $interval
+    elapsed=$((elapsed + interval))
+  done
+
+  echo "WARNING: Timed out after ${max_wait}s waiting for nodes to terminate ($node_count remaining). Proceeding with destroy."
+  return 0
+}
+
 terraform_destroy() {
   local auto_approve="${1:-true}"
 
@@ -148,8 +170,10 @@ terraform_destroy() {
   echo "Destroying Terraform $DEPLOYMENT_NAME"
 
   TMPFILE=$(mktemp)
+  local kubectl_configured=false
   if terraform output -raw configure_kubectl > "$TMPFILE" 2>/dev/null && [[ ! $(cat "$TMPFILE") == *"No outputs found"* ]]; then
     source "$TMPFILE"
+    kubectl_configured=true
     kubectl delete rayjob -A --all || true
     kubectl delete rayservice -A --all || true
   else
@@ -172,6 +196,10 @@ terraform_destroy() {
     else
       echo "FAILED: Terraform destroy of kubectl_manifest resources failed"
       exit 1
+    fi
+
+    if [ "$kubectl_configured" = true ]; then
+      wait_for_nodes_terminated 600
     fi
   fi
 
