@@ -112,7 +112,8 @@ resource "kubectl_manifest" "nvidia_dra_driver" {
 resource "kubectl_manifest" "nvidia_gpu_operator" {
   count = var.enable_nvidia_gpu_operator ? 1 : 0
   yaml_body = templatefile("${path.module}/argocd-addons/nvidia-gpu-operator.yaml", {
-    service_monitor_enabled = var.enable_ai_ml_observability_stack
+    version                 = var.nvidia_gpu_operator_version
+    service_monitor_enabled = var.nvidia_dcgm_exporter_service_monitor
   })
 
   depends_on = [
@@ -122,8 +123,10 @@ resource "kubectl_manifest" "nvidia_gpu_operator" {
 
 # NVIDIA Device Plugin (standalone - GPU scheduling only)
 resource "kubectl_manifest" "nvidia_device_plugin" {
-  count     = !var.enable_nvidia_gpu_operator && var.enable_nvidia_device_plugin && !var.enable_eks_auto_mode ? 1 : 0
-  yaml_body = templatefile("${path.module}/argocd-addons/nvidia-device-plugin.yaml", {})
+  count = !var.enable_nvidia_gpu_operator && var.enable_nvidia_device_plugin && !var.enable_eks_auto_mode ? 1 : 0
+  yaml_body = templatefile("${path.module}/argocd-addons/nvidia-device-plugin.yaml", {
+    version = var.nvidia_device_plugin_version
+  })
 
   depends_on = [
     helm_release.argocd
@@ -134,7 +137,7 @@ resource "kubectl_manifest" "nvidia_device_plugin" {
 resource "kubectl_manifest" "nvidia_dcgm_exporter" {
   count = !var.enable_nvidia_gpu_operator && var.enable_nvidia_dcgm_exporter ? 1 : 0
   yaml_body = templatefile("${path.module}/argocd-addons/nvidia-dcgm-exporter.yaml", {
-    service_monitor_enabled = var.enable_ai_ml_observability_stack
+    service_monitor_enabled = var.nvidia_dcgm_exporter_service_monitor
   })
 
   depends_on = [
@@ -175,35 +178,16 @@ resource "kubectl_manifest" "slurm_operator_yaml" {
 
 # MPI Operator
 resource "kubectl_manifest" "mpi_operator" {
-  count     = var.enable_mpi_operator ? 1 : 0
-  yaml_body = file("${path.module}/argocd-addons/mpi-operator.yaml")
+  count = var.enable_mpi_operator ? 1 : 0
+  yaml_body = templatefile("${path.module}/argocd-addons/mpi-operator.yaml", {
+    version = var.mpi_operator_version
+  })
 
   depends_on = [
     helm_release.argocd,
     kubectl_manifest.cert_manager_yaml
   ]
 }
-
-# NVIDIA Dynamo CRDs
-resource "kubectl_manifest" "nvidia_dynamo_crds_yaml" {
-  count     = var.enable_dynamo_stack ? 1 : 0
-  yaml_body = templatefile("${path.module}/argocd-addons/nvidia-dynamo-crds.yaml", { dynamo_version = var.dynamo_stack_version })
-
-  depends_on = [
-    helm_release.argocd
-  ]
-}
-
-# NVIDIA Dynamo Platform
-resource "kubectl_manifest" "nvidia_dynamo_platform_yaml" {
-  count     = var.enable_dynamo_stack ? 1 : 0
-  yaml_body = templatefile("${path.module}/argocd-addons/nvidia-dynamo-platform.yaml", { dynamo_version = var.dynamo_stack_version })
-
-  depends_on = [
-    helm_release.argocd
-  ]
-}
-
 
 # Langfuse
 resource "kubectl_manifest" "langfuse_yaml" {
@@ -261,6 +245,27 @@ resource "kubectl_manifest" "milvus_yaml" {
   count = var.enable_milvus ? 1 : 0
   yaml_body = templatefile("${path.module}/argocd-addons/vector-databases/milvus/milvus.yaml", {
   })
+
+  depends_on = [
+    helm_release.argocd
+  ]
+}
+
+
+# Selenium Grid
+resource "kubectl_manifest" "selenium_grid_yaml" {
+  count     = var.enable_selenium_grid ? 1 : 0
+  yaml_body = file("${path.module}/argocd-addons/selenium-grid.yaml")
+
+  depends_on = [
+    helm_release.argocd
+  ]
+}
+
+# Jupyter Enterprise Gateway
+resource "kubectl_manifest" "jupyter_enterprise_gateway_yaml" {
+  count     = var.enable_jupyter_enterprise_gateway ? 1 : 0
+  yaml_body = file("${path.module}/argocd-addons/jupyter-enterprise-gateway.yaml")
 
   depends_on = [
     helm_release.argocd

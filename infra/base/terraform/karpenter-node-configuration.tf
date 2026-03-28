@@ -44,6 +44,7 @@ resource "kubectl_manifest" "nodepool" {
   for_each = !var.enable_eks_auto_mode ? local.karpenter_node_pools : {}
 
   yaml_body = each.value
+  wait      = true
 
   depends_on = [
     module.karpenter,
