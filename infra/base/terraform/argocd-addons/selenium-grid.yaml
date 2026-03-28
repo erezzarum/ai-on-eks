@@ -12,21 +12,24 @@ spec:
     chart: selenium-grid
     targetRevision: 0.52.0
     helm:
-      parameters:
-        - name: chromeNode.enabled
-          value: "true"
-        - name: chromeNode.replicas
-          value: "3"
-        - name: firefoxNode.enabled
-          value: "false"
-        - name: firefoxNode.replicas
-          value: "1"
-        - name: edgeNode.enabled
-          value: "false"
-        - name: edgeNode.replicas
-          value: "1"
-        - name: ingress.enabled
-          value: "false"
+      valuesObject:
+        chromeNode:
+          enabled: true
+          extraEnvironmentVariables:
+            - name: SE_NODE_SESSION_TIMEOUT
+              value: '1800'
+            - name: SE_NODE_MAX_SESSION
+              value: '1'
+          replicas: 3
+        edgeNode:
+          enabled: false
+        firefoxNode:
+          enabled: false
+        global:
+          seleniumGrid:
+            sessionRequestTimeout: 600
+        ingress:
+          enabled: false
   destination:
     server: https://kubernetes.default.svc
     namespace: selenium-grid
