@@ -7,9 +7,19 @@ locals {
   secondary_cidr_subnets = compact([for subnet_id, cidr_block in zipmap(module.vpc.private_subnets, module.vpc.private_subnets_cidr_blocks) :
   substr(cidr_block, 0, 4) == "100." ? subnet_id : null])
 
+  # exclude addons for EKS Auto Mode as they are managed by EKS Auto Mode
+  auto_mode_exclude_addons = toset([
+    "vpc-cni",
+    "eks-pod-identity-agent",
+    "aws-ebs-csi-driver",
+    "coredns",
+    "kube-proxy",
+    "eks-node-monitoring-agent",
+  ])
+
   base_addons = {
     for name, enabled in var.enable_cluster_addons :
-    name => {} if enabled && !var.enable_eks_auto_mode
+    name => {} if enabled && !(var.enable_eks_auto_mode && contains(local.auto_mode_exclude_addons, name))
   }
 
   # Extended configurations used for specific addons with custom settings
@@ -96,7 +106,7 @@ module "eks" {
       # NOTE: Don't use this volume for ML workloads
       block_device_mappings = {
         xvda = {
-          device_name = "/dev/xvda"
+          device_name = "/dev/xvdb"
           ebs = {
             volume_size = 100
             volume_type = "gp3"
@@ -169,6 +179,7 @@ module "eks" {
         NodeGroupType            = "g6-mng"
         "nvidia.com/gpu.present" = "true"
         "accelerator"            = "nvidia"
+        "amiFamily"              = "al2023"
       }
 
       min_size     = 0
@@ -247,6 +258,7 @@ module "eks" {
         "nvidia.com/mig.config"         = "p4de-half-balanced" # References GPU Operator embedded MIG profile
         "node-type"                     = "p4de"
         "vpc.amazonaws.com/efa.present" = "true"
+        "amiFamily"                     = "al2023"
       }
 
       taints = {
@@ -414,6 +426,7 @@ data "kubectl_path_documents" "automode_manifests_dummy" {
 resource "kubectl_manifest" "automode_manifests" {
   count     = var.enable_eks_auto_mode ? length(data.kubectl_path_documents.automode_manifests_dummy[0].documents) : 0
   yaml_body = element(data.kubectl_path_documents.automode_manifests[0].documents, count.index)
+  wait      = true
 }
 ################################################################################
 # EKS Auto Mode Ingress

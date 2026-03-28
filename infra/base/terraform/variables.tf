@@ -121,6 +121,21 @@ variable "enable_aws_efa_k8s_device_plugin" {
   type        = bool
   default     = false
 }
+variable "aws_efa_k8s_device_plugin_version" {
+  description = "AWS EFA K8s Device Plugin chart version"
+  type        = string
+  default     = "0.5.22"
+}
+variable "enable_aws_neuron_device_plugin" {
+  description = "Enable AWS Neuron Device Plugin"
+  type        = bool
+  default     = true
+}
+variable "aws_neuron_device_plugin_version" {
+  description = "AWS Neuron Device Plugin chart version"
+  type        = string
+  default     = "1.3.0"
+}
 variable "enable_aws_fsx_csi_driver" {
   description = "Whether or not to deploy the Fsx Driver"
   type        = bool
@@ -146,11 +161,20 @@ variable "enable_amazon_emr" {
   type        = bool
   default     = false
 }
-# Addon Variables for ai-on-eks/infra/base/terraform/addons.tf
 variable "enable_kube_prometheus_stack" {
-  description = "Enable Kube Prometheus addon"
+  description = "Enable Kube Prometheus Stack addon"
   type        = bool
   default     = false
+}
+variable "kube_prometheus_stack_version" {
+  description = "Kube Prometheus Stack version"
+  type        = string
+  default     = "69.5.2"
+}
+variable "kube_prometheus_stack_namespace" {
+  description = "Namespace for kube-prometheus-stack"
+  type        = string
+  default     = "kube-prometheus-stack"
 }
 variable "enable_grafana_operator" {
   description = "Enable Grafana Operator addon"
@@ -173,13 +197,13 @@ variable "grafana_admin_password" {
   default     = ""
   sensitive   = true
 }
-variable "kube_prometheus_stack_namespace" {
-  description = "Namespace for kube-prometheus-stack"
-  type        = string
-  default     = "kube-prometheus-stack"
-}
 variable "enable_ai_ml_observability_stack" {
   description = "Enable AI/ML observability addon"
+  type        = bool
+  default     = false
+}
+variable "observability_mcp_enabled" {
+  description = "Enable AI/ML observability addon MCP servers"
   type        = bool
   default     = false
 }
@@ -266,6 +290,11 @@ variable "enable_mpi_operator" {
   type        = bool
   default     = false
 }
+variable "mpi_operator_version" {
+  description = "MPI Operator chart version"
+  type        = string
+  default     = "0.8.0"
+}
 
 # AWS Load Balancer Controller Variables
 variable "enable_aws_load_balancer_controller" {
@@ -333,6 +362,11 @@ variable "enable_nvidia_gpu_operator" {
   type        = bool
   default     = false
 }
+variable "nvidia_gpu_operator_version" {
+  description = "NVIDIA GPU Operator chart version"
+  type        = string
+  default     = "25.10.1"
+}
 
 variable "enable_nvidia_device_plugin" {
   description = <<-EOF
@@ -352,7 +386,12 @@ variable "enable_nvidia_device_plugin" {
   type        = bool
   default     = true
 }
+variable "nvidia_device_plugin_version" {
+  description = "NVIDIA device plugin chart version"
+  type        = string
+  default     = "0.18.2"
 
+}
 variable "enable_nvidia_dcgm_exporter" {
   description = <<-EOF
     Enable standalone NVIDIA DCGM Exporter (only when GPU Operator is disabled)
@@ -366,7 +405,11 @@ variable "enable_nvidia_dcgm_exporter" {
   type        = bool
   default     = true
 }
-
+variable "nvidia_dcgm_exporter_service_monitor" {
+  description = "Enable ServiceMonitor for DCGM Exporter"
+  type        = bool
+  default     = true
+}
 # Cert Manager
 variable "enable_cert_manager" {
   description = "Enable cert-manager addon"
@@ -499,16 +542,21 @@ variable "kms_key_admin_roles" {
 }
 
 # NVIDIA Dynamo Stack Variables
-variable "enable_dynamo_stack" {
-  description = "Enable NVIDIA Dynamo Stack addon"
+variable "enable_dynamo_platform" {
+  description = "Enable NVIDIA Dynamo Platform"
   type        = bool
   default     = false
 }
 
-variable "dynamo_stack_version" {
-  description = "NVIDIA Dynamo Stack version"
+variable "dynamo_platform_version" {
+  description = "NVIDIA Dynamo Platform version"
   type        = string
-  default     = "v0.4.0"
+  default     = "1.0.0"
+}
+variable "dynamo_platform_namespace" {
+  description = "Namespace for NVIDIA Dynamo Platform"
+  type        = string
+  default     = "dynamo-system"
 }
 
 # Enable SOCI snapshotter parallel pull/unpack mode
