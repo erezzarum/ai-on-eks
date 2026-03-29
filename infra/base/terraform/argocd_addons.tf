@@ -284,3 +284,27 @@ resource "kubectl_manifest" "mcp_gateway_registry_yaml" {
     helm_release.argocd
   ]
 }
+
+# Gateway API CRDs
+resource "kubectl_manifest" "gateway_api_crds_yaml" {
+  count = var.enable_gateway_api_crds ? 1 : 0
+  yaml_body = templatefile("${path.module}/argocd-addons/gateway-api-crds.yaml", {
+    version = var.gateway_api_crds_version
+  })
+
+  depends_on = [
+    helm_release.argocd
+  ]
+}
+
+# Gateway API Inference Extension CRDs
+resource "kubectl_manifest" "gateway_api_inference_crds_yaml" {
+  count = var.enable_gateway_api_inference_crds ? 1 : 0
+  yaml_body = templatefile("${path.module}/argocd-addons/gateway-api-inference-crds.yaml", {
+    version = var.gateway_api_inference_crds_version
+  })
+
+  depends_on = [
+    helm_release.argocd
+  ]
+}
