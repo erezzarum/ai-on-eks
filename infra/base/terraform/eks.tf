@@ -32,11 +32,6 @@ locals {
     eks-pod-identity-agent = {
       before_compute = true
     }
-
-    amazon-cloudwatch-observability = {
-      preserve                 = true
-      service_account_role_arn = aws_iam_role.cloudwatch_observability_role.arn
-    }
   }
 
   # Merge base with overrides
@@ -63,8 +58,8 @@ module "eks" {
   authentication_mode                      = "API_AND_CONFIG_MAP"
   enable_cluster_creator_admin_permissions = true
 
-  # EKS Add-ons
-  addons = local.cluster_addons
+  # EKS Add-ons, skipping if Auto Mode is enabled, addons get installed later after creation of NodePools
+  addons = !var.enable_eks_auto_mode ? local.cluster_addons : null
 
   vpc_id = module.vpc.vpc_id
 
@@ -300,35 +295,25 @@ resource "aws_ec2_tag" "cluster_primary_security_group" {
 }
 
 #---------------------------------------------------------------
-# EKS Amazon CloudWatch Observability Role
+# EKS Amazon CloudWatch Observability Pod Identity
 #---------------------------------------------------------------
-resource "aws_iam_role" "cloudwatch_observability_role" {
-  name_prefix = "${local.name}-eks-cw-agent-role-"
+module "amazon_cloudwatch_observability_pod_identity" {
+  count   = contains(keys(local.cluster_addons), "amazon-cloudwatch-observability") ? 1 : 0
+  source  = "terraform-aws-modules/eks-pod-identity/aws"
+  version = "~> 2.2"
+  name    = "amazon-cloudwatch-observability"
 
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRoleWithWebIdentity"
-        Effect = "Allow"
-        Principal = {
-          Federated = module.eks.oidc_provider_arn
-        }
-        Condition = {
-          StringEquals = {
-            "${replace(module.eks.cluster_oidc_issuer_url, "https://", "")}:sub" : "system:serviceaccount:amazon-cloudwatch:cloudwatch-agent",
-            "${replace(module.eks.cluster_oidc_issuer_url, "https://", "")}:aud" : "sts.amazonaws.com"
-          }
-        }
-      }
-    ]
-  })
+  attach_aws_cloudwatch_observability_policy = true
+
+  associations = {
+    amazon_cloudwatch_observability = {
+      cluster_name    = module.eks.cluster_name
+      namespace       = "amazon-cloudwatch"
+      service_account = "cloudwatch-agent"
+    }
+  }
+
   tags = local.tags
-}
-
-resource "aws_iam_role_policy_attachment" "cloudwatch_observability_policy_attachment" {
-  policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
-  role       = aws_iam_role.cloudwatch_observability_role.name
 }
 
 #---------------------------------------------------------------
@@ -466,4 +451,20 @@ resource "kubernetes_ingress_class_v1" "automode" {
     kubectl_manifest.automode_ingressclass_params,
     module.eks
   ]
+}
+
+################################################################################
+# EKS Auto Mode addons (installed after automode manifests)
+################################################################################
+resource "aws_eks_addon" "auto_mode_after_compute" {
+  for_each = var.enable_eks_auto_mode ? {
+    for name, config in local.cluster_addons :
+    name => config
+  } : {}
+
+  cluster_name                = module.eks.cluster_name
+  addon_name                  = each.key
+  service_account_role_arn    = try(each.value.service_account_role_arn, null)
+  resolve_conflicts_on_update = "PRESERVE"
+  depends_on                  = [kubectl_manifest.automode_manifests]
 }

@@ -104,5 +104,3 @@ cd terraform/_LOCAL
 This runs `terraform destroy` and removes all provisioned resources including the EKS cluster, S3 bucket, AMP workspace, and IAM roles.
 
 > The S3 bucket has `force_destroy = true` so it will be deleted even if it contains model files.
-
-> **Known Issue:** If `enable_kube_prometheus_stack = true`, `terraform destroy` may get stuck and fail with: `client rate limiter Wait returned an error: context deadline exceeded`. Track progress and workarounds in [issue #251](https://github.com/awslabs/ai-on-eks/issues/251).
