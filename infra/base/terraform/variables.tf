@@ -169,7 +169,7 @@ variable "enable_kube_prometheus_stack" {
 variable "kube_prometheus_stack_version" {
   description = "Kube Prometheus Stack version"
   type        = string
-  default     = "69.5.2"
+  default     = "82.16.0"
 }
 variable "kube_prometheus_stack_namespace" {
   description = "Namespace for kube-prometheus-stack"
