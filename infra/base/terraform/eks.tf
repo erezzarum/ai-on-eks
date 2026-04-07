@@ -3,6 +3,15 @@
 #---------------------------------------
 
 locals {
+  # exclude zones where EKS control plane can't reside in: https://docs.aws.amazon.com/eks/latest/userguide/network_reqs.html#network-requirements-subnets
+  cp_excluded_az_ids = ["use1-az3", "usw1-az2", "cac1-az3"]
+  # EKS control plane subnets, exclude zones where EKS control plane can't reside in and local zones
+  cp_subnets = [
+    for s in module.vpc.intra_subnet_objects : s.id
+    if alltrue([for az in local.cp_excluded_az_ids : s.availability_zone_id != az]) &&
+    alltrue([for az in local.local_azs : s.availability_zone != az])
+  ]
+
   # Filter secondary CIDR subnets (starting with "100.")
   secondary_cidr_subnets = compact([for subnet_id, cidr_block in zipmap(module.vpc.private_subnets, module.vpc.private_subnets_cidr_blocks) :
   substr(cidr_block, 0, 4) == "100." ? subnet_id : null])
@@ -63,9 +72,8 @@ module "eks" {
 
   vpc_id = module.vpc.vpc_id
 
-  # Filtering only Secondary CIDR private subnets starting with "100.".
   # Subnet IDs where the EKS Control Plane ENIs will be created
-  subnet_ids = local.secondary_cidr_subnets
+  control_plane_subnet_ids = local.cp_subnets
 
   # Combine root account, current user/role and additional roles to be able to access the cluster KMS key - required for terraform updates
   kms_key_administrators = distinct(concat([
