@@ -628,7 +628,7 @@ variable "ami_family" {
 variable "karpenter_version" {
   description = "Karpenter version"
   type        = string
-  default     = "1.8.1"
+  default     = "1.11.0"
 }
 
 variable "karpenter_additional_ec2nodeclassnames" {
