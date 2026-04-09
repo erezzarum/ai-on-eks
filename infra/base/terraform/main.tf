@@ -34,8 +34,6 @@ data "aws_eks_cluster_auth" "this" {
   name = module.eks.cluster_name
 }
 
-data "aws_availability_zones" "available" {}
-
 data "aws_ecrpublic_authorization_token" "token" {
   region = "us-east-1"
 }
@@ -48,8 +46,6 @@ data "aws_iam_session_context" "current" {
 
 locals {
   name                   = var.name
-  region                 = var.region
-  azs                    = slice(data.aws_availability_zones.available.names, 0, var.availability_zones_count)
   partition              = data.aws_partition.current.partition
   account_id             = data.aws_caller_identity.current.account_id
   mlflow_name            = "mlflow"

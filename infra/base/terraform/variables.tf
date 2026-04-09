@@ -36,8 +36,8 @@ variable "solution_id" {
 
 # VPC with configurable AZs - CIDR size should match AZ count
 variable "vpc_cidr" {
-  description = "VPC CIDR. This should be a valid private (RFC 1918) CIDR range. Recommended: /21 for 2 AZs, /20 for 3 AZs, /19 for 4 AZs. If the network prefix is not provided, it will be computed"
-  default     = "10.1.0.0"
+  description = "VPC CIDR. This should be a valid private (RFC 1918) CIDR range. Recommended to use a /16 CIDR"
+  default     = "10.0.0.0/16"
   type        = string
 }
 
@@ -46,9 +46,33 @@ variable "availability_zones_count" {
   type        = number
   default     = 2
   validation {
-    condition     = var.availability_zones_count >= 2 && var.availability_zones_count <= 4
-    error_message = "The availability_zones_count must be between 2 and 4."
+    condition     = var.availability_zones_count >= 2 && var.availability_zones_count <= 6
+    error_message = "The availability_zones_count must be between 2 and 6."
   }
+}
+
+variable "local_zones_count" {
+  description = "Number of local zones to use for the deployment"
+  type        = number
+  default     = 0
+}
+
+variable "private_subnets_cidr_prefix" {
+  description = "CIDR prefix for the private subnets"
+  type        = number
+  default     = 24
+}
+
+variable "public_subnets_cidr_prefix" {
+  description = "CIDR prefix for the public subnets"
+  type        = number
+  default     = 24
+}
+
+variable "control_plane_subnets_cidr_prefix" {
+  description = "CIDR prefix for the control plane subnets"
+  type        = number
+  default     = 26
 }
 
 variable "single_nat_gateway" {
@@ -58,10 +82,10 @@ variable "single_nat_gateway" {
 }
 
 # RFC6598 range 100.64.0.0/10
-# Note you can only /16 range to VPC. You can add multiples of /16 if required
+# Note you can only add /16 range to VPC. You can add multiples of /16 if required
 variable "secondary_cidr_blocks" {
   description = "Secondary CIDR blocks to be attached to VPC"
-  default     = ["100.64.0.0/16"]
+  default     = ["100.64.0.0/16", "100.65.0.0/16", "100.66.0.0/16", "100.67.0.0/16"]
   type        = list(string)
 }
 
@@ -69,6 +93,12 @@ variable "enable_database_subnets" {
   description = "Whether or not to enable the database subnets"
   type        = bool
   default     = false
+}
+
+variable "database_subnets_cidr_prefix" {
+  description = "CIDR prefix for the database subnets"
+  type        = number
+  default     = 24
 }
 
 variable "enable_eks_auto_mode" {
@@ -598,7 +628,7 @@ variable "ami_family" {
 variable "karpenter_version" {
   description = "Karpenter version"
   type        = string
-  default     = "1.8.1"
+  default     = "1.11.0"
 }
 
 variable "karpenter_additional_ec2nodeclassnames" {
