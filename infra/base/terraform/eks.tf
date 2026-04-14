@@ -32,16 +32,30 @@ locals {
   }
 
   # Extended configurations used for specific addons with custom settings
-  addon_overrides = {
-    vpc-cni = {
-      most_recent    = true
-      before_compute = true
-    }
+  addon_overrides = merge(
+    {
+      vpc-cni = {
+        most_recent    = true
+        before_compute = true
+      }
 
-    eks-pod-identity-agent = {
-      before_compute = true
-    }
-  }
+      eks-pod-identity-agent = {
+        before_compute = true
+      }
+    },
+    try(var.enable_cluster_addons["amazon-cloudwatch-observability"], false) ? {
+      amazon-cloudwatch-observability = {
+        preserve                    = false
+        most_recent                 = true
+        resolve_conflicts_on_create = "OVERWRITE"
+        resolve_conflicts_on_update = "PRESERVE"
+        pod_identity_association = [{
+          role_arn        = module.amazon_cloudwatch_observability_iam_role[0].arn
+          service_account = "cloudwatch-agent"
+        }]
+      }
+    } : {}
+  )
 
   # Merge base with overrides
   cluster_addons = {
@@ -303,22 +317,34 @@ resource "aws_ec2_tag" "cluster_primary_security_group" {
 }
 
 #---------------------------------------------------------------
-# EKS Amazon CloudWatch Observability Pod Identity
+# EKS Amazon CloudWatch Observability Role
 #---------------------------------------------------------------
-module "amazon_cloudwatch_observability_pod_identity" {
-  count   = contains(keys(local.cluster_addons), "amazon-cloudwatch-observability") ? 1 : 0
-  source  = "terraform-aws-modules/eks-pod-identity/aws"
-  version = "~> 2.2"
-  name    = "amazon-cloudwatch-observability"
+module "amazon_cloudwatch_observability_iam_role" {
+  count   = try(var.enable_cluster_addons["amazon-cloudwatch-observability"], false) ? 1 : 0
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role"
+  version = "~> 6.4"
 
-  attach_aws_cloudwatch_observability_policy = true
+  name            = "${local.name}-cw"
+  use_name_prefix = true
 
-  associations = {
-    amazon_cloudwatch_observability = {
-      cluster_name    = module.eks.cluster_name
-      namespace       = "amazon-cloudwatch"
-      service_account = "cloudwatch-agent"
+  trust_policy_permissions = {
+    EKSPodIdentity = {
+      principals = [{
+        type = "Service"
+        identifiers = [
+          "pods.eks.amazonaws.com",
+        ]
+      }]
+      actions = [
+        "sts:AssumeRole",
+        "sts:TagSession",
+      ]
     }
+  }
+
+  policies = {
+    CloudWatchAgentServerPolicy = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+    AWSXrayWriteOnlyAccess      = "arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess"
   }
 
   tags = local.tags
@@ -465,14 +491,21 @@ resource "kubernetes_ingress_class_v1" "automode" {
 # EKS Auto Mode addons (installed after automode manifests)
 ################################################################################
 resource "aws_eks_addon" "auto_mode_after_compute" {
-  for_each = var.enable_eks_auto_mode ? {
-    for name, config in local.cluster_addons :
-    name => config
-  } : {}
+  for_each = { for k, v in local.cluster_addons : k => v if var.enable_eks_auto_mode }
 
-  cluster_name                = module.eks.cluster_name
-  addon_name                  = each.key
-  service_account_role_arn    = try(each.value.service_account_role_arn, null)
+  cluster_name             = module.eks.cluster_name
+  addon_name               = each.key
+  service_account_role_arn = try(each.value.service_account_role_arn, null)
+
+  dynamic "pod_identity_association" {
+    for_each = try(each.value.pod_identity_association, null) != null ? each.value.pod_identity_association : []
+
+    content {
+      role_arn        = pod_identity_association.value.role_arn
+      service_account = pod_identity_association.value.service_account
+    }
+  }
+
   resolve_conflicts_on_update = "PRESERVE"
   depends_on                  = [kubectl_manifest.automode_manifests]
 }
