@@ -373,6 +373,12 @@ variable "enable_nvidia_dra_driver" {
   default     = false
 }
 
+variable "nvidia_dra_driver_version" {
+  description = "NVIDIA DRA Driver version"
+  type        = string
+  default     = "25.12.0"
+}
+
 variable "enable_nvidia_gpu_operator" {
   description = <<-EOF
     Enable NVIDIA GPU Operator
@@ -383,7 +389,6 @@ variable "enable_nvidia_gpu_operator" {
     - Node Feature Discovery (NFD - hardware labeling)
     - GPU Feature Discovery (GFD - GPU-specific labeling)
     - MIG Manager (Multi-Instance GPU partitioning)
-    - Container Toolkit (GPU container runtime)
     - Operator Controller (lifecycle management)
 
     Note: Drivers are NOT installed (pre-installed on EKS AMI)
@@ -395,12 +400,19 @@ variable "enable_nvidia_gpu_operator" {
 variable "nvidia_gpu_operator_version" {
   description = "NVIDIA GPU Operator chart version"
   type        = string
-  default     = "25.10.1"
+  default     = "26.3.0"
+}
+variable "enable_nvidia_gpu_operator_dcgm_exporter" {
+  description = "Enable DCGM Exporter within NVIDIA GPU Operator"
+  type        = bool
+  default     = true
 }
 
 variable "enable_nvidia_device_plugin" {
   description = <<-EOF
-    Enable standalone NVIDIA Device Plugin chart (only when GPU Operator is disabled)
+    Enable standalone NVIDIA Device Plugin chart
+    when GPU Operator is enabled controls if GPU operator installs the device plugin
+    when GPU operator is disabled controls if standalone device plugin is installed
 
     Components deployed:
     - Device Plugin (GPU resource scheduling)
@@ -422,6 +434,7 @@ variable "nvidia_device_plugin_version" {
   default     = "0.18.2"
 
 }
+
 variable "enable_nvidia_dcgm_exporter" {
   description = <<-EOF
     Enable standalone NVIDIA DCGM Exporter (only when GPU Operator is disabled)
@@ -435,6 +448,13 @@ variable "enable_nvidia_dcgm_exporter" {
   type        = bool
   default     = true
 }
+
+variable "nvidia_dcgm_exporter_version" {
+  description = "NVIDIA DCGM Exporter version"
+  type        = string
+  default     = "4.8.1"
+}
+
 variable "nvidia_dcgm_exporter_service_monitor" {
   description = "Enable ServiceMonitor for DCGM Exporter"
   type        = bool
@@ -736,4 +756,26 @@ variable "istio_version" {
   description = "Istio version"
   type        = string
   default     = "1.29.1"
+}
+
+variable "enable_dranet_driver" {
+  description = "Enable DRANET driver addon"
+  type        = bool
+  default     = false
+}
+variable "dranet_driver_version" {
+  description = "DRANET driver version"
+  type        = string
+  default     = "main"
+}
+variable "dranet_driver_image" {
+  description = "DRANET driver image"
+  type = object({
+    repository = string
+    tag        = string
+  })
+  default = {
+    repository = "registry.k8s.io/networking/dranet"
+    tag        = "stable"
+  }
 }

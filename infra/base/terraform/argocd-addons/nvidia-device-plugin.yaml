@@ -3,8 +3,6 @@ kind: Application
 metadata:
   name: nvidia-device-plugin
   namespace: argocd
-  annotations:
-    argocd.argoproj.io/sync-wave: "3"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
@@ -15,19 +13,7 @@ spec:
     targetRevision: ${version}
     helm:
       values: |
-        # Target only nodes running AL2023 AMIs
-        nodeSelector:
-          amiFamily: al2023
-
-        # Enable GPU Feature Discovery (default: false)
-        gfd:
-          enabled: true
-
-        # Configure Node Feature Discovery components
-        nfd:
-          worker:
-            tolerations:
-              - operator: "Exists"
+        ${user_values_yaml}
   destination:
     server: https://kubernetes.default.svc
     namespace: nvidia-device-plugin
@@ -35,14 +21,6 @@ spec:
     syncOptions:
       - ServerSideApply=true
       - CreateNamespace=true
-      - PrunePropagationPolicy=foreground
-      - PruneLast=true
     automated:
       prune: true
       selfHeal: true
-    retry:
-      limit: 5
-      backoff:
-        duration: 5s
-        factor: 2
-        maxDuration: 3m
