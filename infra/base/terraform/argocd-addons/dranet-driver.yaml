@@ -1,28 +1,27 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: nvidia-gpu-operator
+  name: dranet-driver
   namespace: argocd
-  annotations:
-    argocd.argoproj.io/sync-wave: "-1"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   source:
-    repoURL: https://helm.ngc.nvidia.com/nvidia
-    chart: gpu-operator
-    targetRevision: "v${version}"
+    repoURL: https://github.com/kubernetes-sigs/dranet.git
+    path: deployments/helm/dranet
+    targetRevision: ${version}
     helm:
       values: |
         ${user_values_yaml}
   destination:
     server: https://kubernetes.default.svc
-    namespace: gpu-operator
+    namespace: kube-system
   syncPolicy:
     syncOptions:
       - ServerSideApply=true
       - CreateNamespace=true
+      - PruneLast=true
     automated:
       prune: true
       selfHeal: true
