@@ -1,0 +1,239 @@
+apiVersion: karpenter.sh/v1
+kind: NodePool
+metadata:
+  name: p5-nvidia
+spec:
+  disruption:
+    budgets:
+      - nodes: 10%
+    consolidateAfter: 86400s
+    consolidationPolicy: WhenEmpty
+  template:
+    metadata:
+      labels:
+        amiFamily: al2023
+    spec:
+      nodeClassRef:
+        group: karpenter.k8s.aws
+        kind: EC2NodeClass
+        name: p5-nvidia
+      taints:
+        - key: nvidia.com/gpu
+          effect: "NoSchedule"
+      terminationGracePeriod: 48h
+      requirements:
+        - key: karpenter.k8s.aws/instance-family
+          operator: In
+          values:
+            - p5
+            - p5e
+        - key: karpenter.k8s.aws/instance-size
+          operator: In
+          values:
+            - 48xlarge
+        - key: karpenter.sh/capacity-type
+          operator: In
+          values:
+            - on-demand
+            - spot
+  weight: 100
+---
+apiVersion: karpenter.k8s.aws/v1
+kind: EC2NodeClass
+metadata:
+  name: p5-nvidia
+spec:
+  amiSelectorTerms:
+  - alias: al2023@latest
+  blockDeviceMappings:
+  - deviceName: /dev/xvda
+    ebs:
+      encrypted: true
+      volumeSize: 300Gi
+      volumeType: gp3
+  instanceStorePolicy: RAID0
+  role: ${KARPENTER_NODE_IAM_ROLE}
+  securityGroupSelectorTerms:
+  - tags:
+      karpenter.sh/discovery: ${CLUSTER_NAME}
+  subnetSelectorTerms:
+  - tags:
+      Name: ${CLUSTER_NAME}-private-secondary*
+      karpenter.sh/discovery: ${CLUSTER_NAME}
+  userData: |
+    MIME-Version: 1.0
+    Content-Type: multipart/mixed; boundary="//"
+
+    --//
+    Content-Type: text/x-shellscript; charset="us-ascii"
+
+    #!/bin/bash
+    echo "$(date): Installing Lustre client"
+    # Install the Lustre client and EFA driver
+    # https://docs.aws.amazon.com/fsx/latest/LustreGuide/configure-efa-clients.html#install-required-drivers
+    cd /tmp
+    curl -LO https://docs.aws.amazon.com/fsx/latest/LustreGuide/samples/install-fsx-lustre-client.zip
+    unzip install-fsx-lustre-client.zip
+    cd install-fsx-lustre-client
+    sudo ./bin/install-fsx-lustre-client.sh --install-lustre --install-efa
+
+    # Install GDS driver
+    export GDS_NVIDIA_FS_VERSION="v2.28.2"
+    export NVFS_MAX_PEER_DEVS=128
+    export NVFS_MAX_PCI_DEPTH=16
+    echo "$(date): Installing NVIDIA GDS Driver: gds-nvidia-fs-${DOLLAR}{GDS_NVIDIA_FS_VERSION}"
+    sudo dnf install -y git
+    if [ ! -f /opt/gds-nvidia-fs/nvidia-fs.ko ]; then
+        sudo rm -rf /opt/gds-nvidia-fs
+        sudo mkdir /opt/gds-nvidia-fs
+        sudo git clone https://github.com/NVIDIA/gds-nvidia-fs.git /opt/gds-nvidia-fs
+        cd /opt/gds-nvidia-fs
+        sudo git checkout "${DOLLAR}{GDS_NVIDIA_FS_VERSION}"
+        cd src
+        sudo -E make
+        sudo cp -p nvidia-fs.ko /lib/modules/$(uname -r)/extra/nvidia-fs.ko
+    fi
+    echo "$(date): Loading nvidia-fs module"
+    sudo depmod $(uname -r)
+    sudo modprobe -v nvidia_fs
+
+    # Configure EFA for the Lustre client
+    # https://docs.aws.amazon.com/fsx/latest/LustreGuide/configure-efa-clients.html#install-efa-on-client
+    echo "$(date): Configuring EFA on FSx for Lustre client"
+    cd /tmp
+    curl -LO https://docs.aws.amazon.com/fsx/latest/LustreGuide/samples/configure-efa-fsx-lustre-client.zip
+    unzip configure-efa-fsx-lustre-client.zip
+    cd /tmp/configure-efa-fsx-lustre-client
+    sudo ./setup.sh --optimized-for-gds
+    echo "$(date): EFA on FSx for Lustre client setup completed successfully."
+
+    --//
+    Content-Type: application/node.eks.aws
+
+    apiVersion: node.eks.aws/v1alpha1
+    kind: NodeConfig
+    spec:
+      featureGates:
+        FastImagePull: true
+    --//
+  networkInterfaces:
+    - networkCardIndex: 0
+      deviceIndex: 0
+      interfaceType: "interface"
+    - networkCardIndex: 0
+      deviceIndex: 1
+      interfaceType: "efa-only"
+    - networkCardIndex: 1
+      deviceIndex: 0
+      interfaceType: "efa-only"
+    - networkCardIndex: 2
+      deviceIndex: 0
+      interfaceType: "efa-only"
+    - networkCardIndex: 3
+      deviceIndex: 0
+      interfaceType: "efa-only"
+    - networkCardIndex: 4
+      deviceIndex: 0
+      interfaceType: "efa-only"
+    - networkCardIndex: 4
+      deviceIndex: 1
+      interfaceType: "interface"
+    - networkCardIndex: 5
+      deviceIndex: 0
+      interfaceType: "efa-only"
+    - networkCardIndex: 6
+      deviceIndex: 0
+      interfaceType: "efa-only"
+    - networkCardIndex: 7
+      deviceIndex: 0
+      interfaceType: "efa-only"
+    - networkCardIndex: 8
+      deviceIndex: 0
+      interfaceType: "efa-only"
+    - networkCardIndex: 8
+      deviceIndex: 1
+      interfaceType: "interface"
+    - networkCardIndex: 9
+      deviceIndex: 0
+      interfaceType: "efa-only"
+    - networkCardIndex: 10
+      deviceIndex: 0
+      interfaceType: "efa-only"
+    - networkCardIndex: 11
+      deviceIndex: 0
+      interfaceType: "efa-only"
+    - networkCardIndex: 12
+      deviceIndex: 0
+      interfaceType: "efa-only"
+    - networkCardIndex: 12
+      deviceIndex: 1
+      interfaceType: "interface"
+    - networkCardIndex: 13
+      deviceIndex: 0
+      interfaceType: "efa-only"
+    - networkCardIndex: 14
+      deviceIndex: 0
+      interfaceType: "efa-only"
+    - networkCardIndex: 15
+      deviceIndex: 0
+      interfaceType: "efa-only"
+    - networkCardIndex: 16
+      deviceIndex: 0
+      interfaceType: "efa-only"
+    - networkCardIndex: 16
+      deviceIndex: 1
+      interfaceType: "interface"
+    - networkCardIndex: 17
+      deviceIndex: 0
+      interfaceType: "efa-only"
+    - networkCardIndex: 18
+      deviceIndex: 0
+      interfaceType: "efa-only"
+    - networkCardIndex: 19
+      deviceIndex: 0
+      interfaceType: "efa-only"
+    - networkCardIndex: 20
+      deviceIndex: 0
+      interfaceType: "efa-only"
+    - networkCardIndex: 20
+      deviceIndex: 1
+      interfaceType: "interface"
+    - networkCardIndex: 21
+      deviceIndex: 0
+      interfaceType: "efa-only"
+    - networkCardIndex: 22
+      deviceIndex: 0
+      interfaceType: "efa-only"
+    - networkCardIndex: 23
+      deviceIndex: 0
+      interfaceType: "efa-only"
+    - networkCardIndex: 24
+      deviceIndex: 0
+      interfaceType: "efa-only"
+    - networkCardIndex: 24
+      deviceIndex: 1
+      interfaceType: "interface"
+    - networkCardIndex: 25
+      deviceIndex: 0
+      interfaceType: "efa-only"
+    - networkCardIndex: 26
+      deviceIndex: 0
+      interfaceType: "efa-only"
+    - networkCardIndex: 27
+      deviceIndex: 0
+      interfaceType: "efa-only"
+    - networkCardIndex: 28
+      deviceIndex: 0
+      interfaceType: "efa-only"
+    - networkCardIndex: 28
+      deviceIndex: 1
+      interfaceType: "interface"
+    - networkCardIndex: 29
+      deviceIndex: 0
+      interfaceType: "efa-only"
+    - networkCardIndex: 30
+      deviceIndex: 0
+      interfaceType: "efa-only"
+    - networkCardIndex: 31
+      deviceIndex: 0
+      interfaceType: "efa-only"

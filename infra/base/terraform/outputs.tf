@@ -43,3 +43,18 @@ output "s3_models_inference_sa_namespace" {
   description = "Namespace for model inference service account"
   value       = var.enable_s3_models_storage ? var.s3_models_inference_sa_namespace : null
 }
+
+output "karpenter_node_iam_role" {
+  description = "Karpenter Node IAM role"
+  value       = var.enable_eks_auto_mode ? module.eks.node_iam_role_name : module.karpenter[0].node_iam_role_name
+}
+
+output "secondary_subnet_by_az" {
+  description = "Map of secondary subnet ids by AZ"
+  value       = local.secondary_subnets_by_az
+}
+
+output "cluster_primary_security_group_id" {
+  description = "Cluster security group that was created by Amazon EKS for the cluster. Referred to as 'Cluster security group' in the EKS console"
+  value       = module.eks.cluster_primary_security_group_id
+}
