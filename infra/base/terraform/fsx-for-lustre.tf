@@ -150,7 +150,7 @@ resource "kubernetes_persistent_volume_v1" "fsx_static_pv" {
 #---------------------------------------------------------------
 # FSx for Lustre Persistent Volume Claim
 #---------------------------------------------------------------
-resource "kubernetes_namespace" "fsx_namespace" {
+resource "kubernetes_namespace_v1" "fsx_namespace" {
   count = var.deploy_fsx_volume && var.fsx_pvc_namespace != "default" ? 1 : 0
   metadata {
     name = var.fsx_pvc_namespace

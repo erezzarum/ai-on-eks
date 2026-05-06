@@ -64,6 +64,18 @@ locals {
           }
         })
       }
+
+      coredns = {
+        preserve = false
+      }
+
+      aws-ebs-csi-driver = {
+        preserve = false
+      }
+
+      metrics-server = {
+        preserve = false
+      }
     },
 
     try(var.enable_cluster_addons["amazon-cloudwatch-observability"], false) ? {
@@ -390,7 +402,7 @@ resource "kubernetes_annotations" "disable_gp2" {
   depends_on = [module.eks.eks_cluster_id]
 }
 
-resource "kubernetes_storage_class" "default_gp3" {
+resource "kubernetes_storage_class_v1" "default_gp3" {
   metadata {
     name = "gp3"
     annotations = {

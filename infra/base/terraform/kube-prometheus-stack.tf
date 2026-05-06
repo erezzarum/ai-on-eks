@@ -14,7 +14,7 @@ locals {
 #---------------------------------------------------------------
 # Kube Prometheus Namespace
 #---------------------------------------------------------------
-resource "kubernetes_namespace" "kube_prometheus_stack_namespace" {
+resource "kubernetes_namespace_v1" "kube_prometheus_stack_namespace" {
   count = var.enable_kube_prometheus_stack ? 1 : 0
   metadata {
     name = var.kube_prometheus_stack_namespace
@@ -36,7 +36,7 @@ locals {
 #---------------------------------------------------------------
 # Kubernetes Secret for Grafana Admin
 #---------------------------------------------------------------
-resource "kubernetes_secret" "grafana_admin" {
+resource "kubernetes_secret_v1" "grafana_admin" {
   count = var.enable_kube_prometheus_stack ? 1 : 0
   metadata {
     name      = "grafana-admin-secret"
@@ -50,7 +50,7 @@ resource "kubernetes_secret" "grafana_admin" {
 
   depends_on = [
     kubectl_manifest.kube_prometheus_stack,
-    kubernetes_namespace.kube_prometheus_stack_namespace
+    kubernetes_namespace_v1.kube_prometheus_stack_namespace
   ]
 }
 
@@ -58,7 +58,7 @@ resource "kubernetes_secret" "grafana_admin" {
 # Alias Secret for backward compatibility with kubectl commands
 # Creates kube-prometheus-stack-grafana secret with same credentials
 #---------------------------------------------------------------
-resource "kubernetes_secret" "grafana_admin_alias" {
+resource "kubernetes_secret_v1" "grafana_admin_alias" {
   count = var.enable_kube_prometheus_stack ? 1 : 0
   metadata {
     name      = "kube-prometheus-stack-grafana"
@@ -71,8 +71,8 @@ resource "kubernetes_secret" "grafana_admin_alias" {
   }
 
   depends_on = [
-    kubernetes_secret.grafana_admin,
-    kubernetes_namespace.kube_prometheus_stack_namespace
+    kubernetes_secret_v1.grafana_admin,
+    kubernetes_namespace_v1.kube_prometheus_stack_namespace
   ]
 }
 

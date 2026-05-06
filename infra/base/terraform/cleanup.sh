@@ -31,7 +31,7 @@ else
 fi
 
 # List of Terraform modules to destroy in sequence
-targets=($(terraform state list | grep "kubectl_manifest\." | grep -v "kubectl_manifest.aws_load_balancer_controller" || true))
+targets=($(terraform state list | grep "kubectl_manifest\.\|helm_release.argocd" | grep -v "kubectl_manifest.aws_load_balancer_controller" || true))
 
 # Destroy all kubectl_manifest resources at once (excluding aws_load_balancer_controller)
 if [ ${#targets[@]} -gt 0 ]; then
@@ -54,6 +54,8 @@ if [[ ! $(cat $TMPFILE) == *"No outputs found"* ]]; then
   # Delete all nodepools (covers both Karpenter and any remaining Auto Mode pools)
   echo "Deleting all nodepools..."
   kubectl delete nodepool --all --wait=true --timeout=300s 2>/dev/null || echo "WARNING: No nodepools found or delete failed"
+  kubectl delete nodeclass --all --wait=true --timeout=300s 2>/dev/null || echo "WARNING: No nodeclasses found or delete failed"
+  kubectl delete ec2nodeclass --all --wait=true --timeout=300s 2>/dev/null || echo "WARNING: No ec2nodeclasses found or delete failed"
   echo "Node drain complete"
 fi
 
