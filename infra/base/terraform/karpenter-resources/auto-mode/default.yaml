@@ -10,7 +10,9 @@ spec:
     consolidateAfter: 30s
     consolidationPolicy: WhenEmptyOrUnderutilized
   template:
-    metadata: {}
+    metadata:
+      labels:
+        amiFamily: ${ami_family}
     spec:
       expireAfter: 336h
       nodeClassRef:
@@ -53,7 +55,9 @@ spec:
     consolidateAfter: 30s
     consolidationPolicy: WhenEmptyOrUnderutilized
   template:
-    metadata: {}
+    metadata:
+      labels:
+        amiFamily: ${ami_family}
     spec:
       expireAfter: 336h
       nodeClassRef:

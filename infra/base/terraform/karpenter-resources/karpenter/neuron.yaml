@@ -14,13 +14,13 @@ spec:
         amiFamily: ${ami_family}
         accelerator: neuron
     spec:
-      expireAfter: 336h
+      expireAfter: 720h
       nodeClassRef:
-        group: eks.amazonaws.com
-        kind: NodeClass
+        group: karpenter.k8s.aws
+        kind: EC2NodeClass
         name: neuron
       requirements:
-        - key: eks.amazonaws.com/instance-family
+        - key: karpenter.sh/instance-family
           operator: In
           values:
             - inf2
@@ -37,22 +37,9 @@ spec:
           value: Exists
       terminationGracePeriod: 24h
 ---
-apiVersion: eks.amazonaws.com/v1
-kind: NodeClass
+apiVersion: karpenter.k8s.aws/v1
+kind: EC2NodeClass
 metadata:
   name: neuron
 spec:
-  ephemeralStorage:
-    iops: 3000
-    size: 80Gi
-    throughput: 125
-  networkPolicy: DefaultAllow
-  networkPolicyEventLogs: Disabled
-  role: ${role}
-  securityGroupSelectorTerms:
-    - id: ${cluster_security_group_id}
-  snatPolicy: Random
-  subnetSelectorTerms:
-    - tags:
-        karpenter.sh/discovery: "${cluster_name}"
-        Name: "${cluster_name}-private-secondary*" # Only secondary cidr subnets
+  ${indent(2, ec2nodeclass)}

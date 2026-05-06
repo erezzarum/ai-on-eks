@@ -131,8 +131,14 @@ DESC
     eks-pod-identity-agent          = true
     metrics-server                  = true
     eks-node-monitoring-agent       = true
-    amazon-cloudwatch-observability = true
+    amazon-cloudwatch-observability = false
   }
+}
+
+variable "vpc_cni_configuration" {
+  description = "Configuration values for the VPC CNI addon (e.g., ENABLE_PREFIX_DELEGATION, WARM_PREFIX_TARGET). Passed as-is to the addon's configuration_values via jsonencode."
+  type        = map(any)
+  default     = {}
 }
 
 # Infrastructure Variables
@@ -404,6 +410,11 @@ variable "nvidia_gpu_operator_version" {
 }
 variable "enable_nvidia_gpu_operator_dcgm_exporter" {
   description = "Enable DCGM Exporter within NVIDIA GPU Operator"
+  type        = bool
+  default     = true
+}
+variable "enable_nvidia_gpu_operator_mig_manager" {
+  description = "Enable MIG Manager within NVIDIA GPU Operator"
   type        = bool
   default     = true
 }
@@ -758,24 +769,22 @@ variable "istio_version" {
   default     = "1.29.1"
 }
 
-variable "enable_dranet_driver" {
-  description = "Enable DRANET driver addon"
+variable "enable_aws_dranet" {
+  description = "Enable AWS DRANET driver addon"
   type        = bool
   default     = false
 }
-variable "dranet_driver_version" {
-  description = "DRANET driver version"
+variable "aws_dranet_version" {
+  description = "AWS DRANET driver version"
   type        = string
-  default     = "main"
+  default     = "1.0.0"
 }
-variable "dranet_driver_image" {
-  description = "DRANET driver image"
-  type = object({
-    repository = string
-    tag        = string
-  })
+
+variable "nodepools" {
+  description = "Map of nodepool names to enable/disable"
+  type        = map(bool)
   default = {
-    repository = "registry.k8s.io/networking/dranet"
-    tag        = "stable"
+    gpu    = false
+    neuron = false
   }
 }

@@ -25,6 +25,10 @@ devicePlugin:
     - name: MOFED_ENABLED
       value: "false"
 
+# DCGM service (nv-hostengine)
+dcgm:
+  enabled: true
+
 # DCGM exporter for monitoring
 dcgmExporter:
   enabled: ${enable_dcgm_exporter}
@@ -53,7 +57,7 @@ kataSandboxDevicePlugin:
 
 # MIG Manager configuration with embedded MIG profiles
 migManager:
-  enabled: true
+  enabled: ${enable_mig_manager}
   env:
     - name: WITH_REBOOT
       value: "true"

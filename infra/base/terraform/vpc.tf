@@ -52,6 +52,8 @@ locals {
       k % local.secondary_subnets_per_cidr
     )
   ]
+
+  secondary_subnets_by_az = { for k, v in zipmap(local.azs, slice(module.vpc.private_subnets, length(module.vpc.private_subnets) - local.azs_count, length(module.vpc.private_subnets))) : k => v }
 }
 
 module "subnets" {
