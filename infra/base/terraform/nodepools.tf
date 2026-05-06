@@ -44,20 +44,20 @@ data "kubectl_path_documents" "nodepools_manifests" {
 data "kubectl_path_documents" "nodepools_manifests_dummy" {
   pattern = "${path.module}/karpenter-resources/${var.enable_eks_auto_mode ? "auto-mode" : "karpenter"}/*.yaml"
   vars = {
-    role                      = local.node_iam_role
-    cluster_name              = module.eks.cluster_name
-    cluster_security_group_id = module.eks.cluster_primary_security_group_id
-    ami_family                = var.ami_family
-    ec2nodeclass              = local.ec2nodeclass
+    role                      = ""
+    cluster_name              = ""
+    cluster_security_group_id = ""
+    ami_family                = ""
+    ec2nodeclass              = ""
   }
 }
 
 resource "kubectl_manifest" "nodepools_manifests" {
   for_each = {
-    for key, value in data.kubectl_path_documents.nodepools_manifests.manifests :
+    for key, value in data.kubectl_path_documents.nodepools_manifests_dummy.manifests :
     key => value if lookup(local.nodepools, element(split("/", key), length(split("/", key)) - 1), true)
   }
 
-  yaml_body = each.value
+  yaml_body = data.kubectl_path_documents.nodepools_manifests.manifests[each.key]
   wait      = true
 }

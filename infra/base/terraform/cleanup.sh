@@ -24,35 +24,14 @@ if [[ ! $(cat $TMPFILE) == *"No outputs found"* ]]; then
   source "$TMPFILE"
   kubectl delete rayjob -A --all
   kubectl delete rayservice -A --all
+  # Remove PDBs to unblock nodepools draining & deletion
+  kubectl delete pdb -A --all || true
 else
   echo "No outputs found, skipping kubectl delete"
 fi
 
-
-# Drain nodes before terraform destroy. Terraform deletes VPC routes concurrently
-# with EKS cluster deletion, which can strand nodes without network connectivity.
-echo "Draining nodes before terraform destroy..."
-if [[ ! $(cat $TMPFILE) == *"No outputs found"* ]]; then
-  # For Auto Mode clusters: disable built-in nodepools via EKS API
-  AUTOMODE=$(terraform output -raw enable_eks_auto_mode 2>/dev/null || echo "false")
-  if [[ "$AUTOMODE" == "true" ]]; then
-    echo "Disabling built-in nodepools via EKS API..."
-    aws eks update-cluster-config \
-      --name "$CLUSTERNAME" \
-      --region "$REGION" \
-      --compute-config '{"enabled":true,"nodePools":[]}' || echo "WARNING: Failed to disable built-in nodepools"
-    echo "Waiting for cluster update to complete..."
-    aws eks wait cluster-active --name "$CLUSTERNAME" --region "$REGION" || echo "WARNING: Wait timed out"
-  fi
-
-  # Delete all nodepools (covers both Karpenter and any remaining Auto Mode pools)
-  echo "Deleting all nodepools..."
-  kubectl delete nodepool --all --wait=true --timeout=300s 2>/dev/null || echo "WARNING: No nodepools found or delete failed"
-  echo "Node drain complete"
-fi
-
 # List of Terraform modules to destroy in sequence
-targets=($(terraform state list | grep "kubectl_manifest\." | grep -v "kubectl_manifest.aws_load_balancer_controller"))
+targets=($(terraform state list | grep "kubectl_manifest\." | grep -v "kubectl_manifest.aws_load_balancer_controller" || true))
 
 # Destroy all kubectl_manifest resources at once (excluding aws_load_balancer_controller)
 if [ ${#targets[@]} -gt 0 ]; then
@@ -71,6 +50,13 @@ if [ ${#targets[@]} -gt 0 ]; then
   fi
 fi
 
+if [[ ! $(cat $TMPFILE) == *"No outputs found"* ]]; then
+  # Delete all nodepools (covers both Karpenter and any remaining Auto Mode pools)
+  echo "Deleting all nodepools..."
+  kubectl delete nodepool --all --wait=true --timeout=300s 2>/dev/null || echo "WARNING: No nodepools found or delete failed"
+  echo "Node drain complete"
+fi
+
 ## Final destroy to catch any remaining resources
 echo "Destroying remaining resources..."
 destroy_output=$($TERRAFORM_COMMAND -var="region=$REGION" 2>&1 | tee /dev/tty)
@@ -81,6 +67,7 @@ else
   exit 1
 fi
 
+rm -f "$TMPFILE"
 echo "Cleaning up PVCs and EBS volumes for deployment: $DEPLOYMENT_NAME"
 
 # Get the list of EBS volumes with the Blueprint tag

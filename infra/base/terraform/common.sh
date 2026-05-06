@@ -152,12 +152,13 @@ terraform_destroy() {
     source "$TMPFILE"
     kubectl delete rayjob -A --all || true
     kubectl delete rayservice -A --all || true
+    # Remove PDBs to unblock nodepools draining & deletion
+    kubectl delete pdb -A --all || true
   else
     echo "No outputs found, skipping kubectl delete"
   fi
-  rm -f "$TMPFILE"
 
-  targets=($(terraform state list | grep "kubectl_manifest\." | grep -v "kubectl_manifest.aws_load_balancer_controller"))
+  targets=($(terraform state list | grep "kubectl_manifest\." | grep -v "kubectl_manifest.aws_load_balancer_controller" || true))
 
   if [ ${#targets[@]} -gt 0 ]; then
     echo "Destroying kubectl_manifest resources..."
@@ -173,6 +174,13 @@ terraform_destroy() {
       echo "FAILED: Terraform destroy of kubectl_manifest resources failed"
       exit 1
     fi
+  fi
+
+  if [[ ! $(cat $TMPFILE) == *"No outputs found"* ]]; then
+    # Delete all nodepools (covers both Karpenter and any remaining Auto Mode pools)
+    echo "Deleting all nodepools..."
+    kubectl delete nodepool --all --wait=true --timeout=300s 2>/dev/null || echo "WARNING: No nodepools found or delete failed"
+    echo "Node drain complete"
   fi
 
   echo "Destroying remaining resources..."
