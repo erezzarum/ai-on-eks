@@ -662,12 +662,6 @@ variable "karpenter_version" {
   default     = "1.11.0"
 }
 
-variable "karpenter_additional_ec2nodeclassnames" {
-  description = "Additional EC2 NodeClass Names"
-  type        = list(string)
-  default     = []
-}
-
 # S3 Model Storage Variables
 variable "enable_s3_models_storage" {
   description = "Enable S3 model storage infrastructure"
