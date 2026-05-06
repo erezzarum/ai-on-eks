@@ -172,6 +172,11 @@ variable "aws_neuron_device_plugin_version" {
   type        = string
   default     = "1.3.0"
 }
+variable "enable_aws_neuron_monitor" {
+  description = "Enable AWS Neuron Monitor"
+  type        = bool
+  default     = true
+}
 variable "enable_aws_fsx_csi_driver" {
   description = "Whether or not to deploy the Fsx Driver"
   type        = bool
