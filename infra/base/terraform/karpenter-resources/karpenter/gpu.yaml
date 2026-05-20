@@ -11,7 +11,7 @@ spec:
   template:
     metadata:
       labels:
-        amiFamily: ${ami_family}
+        ai.eks.amazonaws.com/amiFamily: ${ami_family}
         accelerator: nvidia
     spec:
       expireAfter: 720h
@@ -36,7 +36,6 @@ spec:
       taints:
         - effect: NoSchedule
           key: nvidia.com/gpu
-          value: Exists
       terminationGracePeriod: 24h
 ---
 apiVersion: karpenter.k8s.aws/v1

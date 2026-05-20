@@ -1,5 +1,5 @@
 amiSelectorTerms:
-  - alias: al2023@latest
+  - alias: al2023@v20260423
 role: ${node_iam_role}
 subnetSelectorTerms:
   - tags:
@@ -24,16 +24,17 @@ userData: |
   Content-Type: multipart/mixed; boundary="//"
 
   --//
-%{ if enable_soci_snapshotter && soci_snapshotter_use_instance_store ~}
+%{ if enable_soci_snapshotter && !soci_snapshotter_use_instance_store ~}
   Content-Type: text/x-shellscript; charset="us-ascii"
 
   #!/bin/bash
-  sed -i "s|ExecStart=/usr/bin/soci-snapshotter-grpc|ExecStart=/usr/bin/soci-snapshotter-grpc --root /var/lib/containerd/io.containerd.snapshotter.v1.soci|" /etc/systemd/system/soci-snapshotter.service
+  mkdir /var/lib/soci-snapshotter
+  sed -i "s|ExecStart=/usr/bin/soci-snapshotter-grpc|ExecStart=/usr/bin/soci-snapshotter-grpc --root /var/lib/soci-snapshotter|" /etc/systemd/system/soci-snapshotter.service
   systemctl daemon-reload
 
   --//
-%{ endif ~}
-%{ if enable_soci_snapshotter ~}
+%{~ endif ~}
+%{ if enable_soci_snapshotter }
   Content-Type: application/node.eks.aws
 
   apiVersion: node.eks.aws/v1alpha1
@@ -41,11 +42,11 @@ userData: |
   spec:
     featureGates:
       FastImagePull: true
-%{ if soci_snapshotter_use_instance_store ~}
+%{ if !soci_snapshotter_use_instance_store ~}
     containerd:
       config: |
         [proxy_plugins.soci.exports]
-        root = "/var/lib/containerd/io.containerd.snapshotter.v1.soci"
+        root = "/var/lib/soci-snapshotter"
 %{ endif ~}
   --//
 %{ endif ~}

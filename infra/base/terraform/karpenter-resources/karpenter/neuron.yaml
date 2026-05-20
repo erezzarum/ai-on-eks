@@ -11,7 +11,7 @@ spec:
   template:
     metadata:
       labels:
-        amiFamily: ${ami_family}
+        ai.eks.amazonaws.com/amiFamily: ${ami_family}
         accelerator: neuron
     spec:
       expireAfter: 720h
@@ -20,7 +20,7 @@ spec:
         kind: EC2NodeClass
         name: neuron
       requirements:
-        - key: karpenter.sh/instance-family
+        - key: karpenter.k8s.aws/instance-family
           operator: In
           values:
             - inf2
@@ -34,7 +34,6 @@ spec:
       taints:
         - effect: NoSchedule
           key: aws.amazon.com/neuron
-          value: Exists
       terminationGracePeriod: 24h
 ---
 apiVersion: karpenter.k8s.aws/v1

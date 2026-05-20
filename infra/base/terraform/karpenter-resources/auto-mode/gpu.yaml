@@ -11,7 +11,7 @@ spec:
   template:
     metadata:
       labels:
-        amiFamily: ${ami_family}
+        ai.eks.amazonaws.com/amiFamily: ${ami_family}
         accelerator: nvidia
     spec:
       expireAfter: 336h
@@ -36,7 +36,6 @@ spec:
       taints:
         - effect: NoSchedule
           key: nvidia.com/gpu
-          value: Exists
       terminationGracePeriod: 24h
 ---
 apiVersion: eks.amazonaws.com/v1
@@ -50,7 +49,7 @@ spec:
     throughput: 125
   networkPolicy: DefaultAllow
   networkPolicyEventLogs: Disabled
-  role: ${role}
+  role: ${node_iam_role}
   securityGroupSelectorTerms:
     - id: ${cluster_security_group_id}
   snatPolicy: Random

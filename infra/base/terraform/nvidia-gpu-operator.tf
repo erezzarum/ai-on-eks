@@ -1,7 +1,7 @@
 locals {
   nvidia_gpu_operator_values = yamldecode(templatefile("${path.module}/helm-values/nvidia-gpu-operator.yaml", {
-    enable_device_plugin                  = var.enable_nvidia_device_plugin && var.enable_nvidia_gpu_operator && var.ami_family == "al2023" && !var.enable_eks_auto_mode
-    enable_mig_manager                    = var.enable_nvidia_gpu_operator_mig_manager && var.ami_family == "al2023" && !var.enable_eks_auto_mode
+    enable_device_plugin                  = var.enable_nvidia_device_plugin && var.enable_nvidia_gpu_operator && !var.enable_eks_auto_mode
+    enable_mig_manager                    = var.enable_nvidia_gpu_operator_mig_manager && !var.enable_eks_auto_mode
     enable_dcgm_exporter                  = var.enable_nvidia_gpu_operator_dcgm_exporter
     dcgm_exporter_service_monitor_enabled = local.nvidia_dcgm_exporter_service_monitor
     dcgm_exporter_metrics                 = local.nvidia_dcgm_exporter_metrics

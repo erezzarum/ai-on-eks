@@ -11,7 +11,7 @@ spec:
   template:
     metadata:
       labels:
-        amiFamily: ${ami_family}
+        ai.eks.amazonaws.com/amiFamily: ${ami_family}
     spec:
       expireAfter: 720h
       nodeClassRef:

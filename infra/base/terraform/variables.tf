@@ -160,7 +160,7 @@ variable "enable_aws_efa_k8s_device_plugin" {
 variable "aws_efa_k8s_device_plugin_version" {
   description = "AWS EFA K8s Device Plugin chart version"
   type        = string
-  default     = "0.5.22"
+  default     = "0.5.26"
 }
 variable "enable_aws_neuron_device_plugin" {
   description = "Enable AWS Neuron Device Plugin"
@@ -635,11 +635,11 @@ variable "enable_soci_snapshotter" {
 # SOCI snapshotter root dir bind to instance store
 variable "soci_snapshotter_use_instance_store" {
   description = <<-EOF
-    When disabled (default) - Configure the EBS volume used by Bottlerocket's container resources to be fully optimized: IOPs: 16K, Throughput: 1000MiB/s
-    When enabled - Configure SOCI snapshotter root dir to bind to ephemeral storage / instance store"
+    When disabled - Configure the EBS volume used for container resources to be fully optimized: IOPs: 16K, Throughput: 1000MiB/s
+    When enabled (default) - Configure SOCI snapshotter root dir to bind to ephemeral storage / instance store"
   EOF
   type        = bool
-  default     = false
+  default     = true
 }
 
 # Configure kernel max_user_namespaces
@@ -739,7 +739,7 @@ variable "enable_gateway_api_inference_crds" {
 variable "gateway_api_inference_crds_version" {
   description = "Gateway API Inference Extension CRDs version"
   type        = string
-  default     = "1.4.0"
+  default     = "1.5.0"
 }
 
 # AgentGateway
@@ -783,7 +783,7 @@ variable "nodepools" {
   description = "Map of nodepool names to enable/disable"
   type        = map(bool)
   default = {
-    gpu    = false
-    neuron = false
+    gpu    = true
+    neuron = true
   }
 }

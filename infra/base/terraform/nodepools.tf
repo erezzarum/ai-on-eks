@@ -1,7 +1,7 @@
 locals {
   default_nodepools = {
-    gpu    = false
-    neuron = false
+    gpu    = true
+    neuron = true
   }
 
   nodepools     = merge(local.default_nodepools, var.nodepools)
@@ -25,7 +25,7 @@ locals {
 data "kubectl_path_documents" "nodepools_manifests" {
   pattern = "${path.module}/karpenter-resources/${var.enable_eks_auto_mode ? "auto-mode" : "karpenter"}/*.yaml"
   vars = {
-    role                      = local.node_iam_role
+    node_iam_role             = local.node_iam_role
     cluster_name              = module.eks.cluster_name
     cluster_security_group_id = module.eks.cluster_primary_security_group_id
     ami_family                = var.ami_family
@@ -44,7 +44,7 @@ data "kubectl_path_documents" "nodepools_manifests" {
 data "kubectl_path_documents" "nodepools_manifests_dummy" {
   pattern = "${path.module}/karpenter-resources/${var.enable_eks_auto_mode ? "auto-mode" : "karpenter"}/*.yaml"
   vars = {
-    role                      = ""
+    node_iam_role             = ""
     cluster_name              = ""
     cluster_security_group_id = ""
     ami_family                = ""

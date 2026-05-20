@@ -3,7 +3,7 @@ mofedEnabled: false
 
 # Target only nodes running AL2023 AMIs
 nodeSelector:
-  amiFamily: al2023
+  ai.eks.amazonaws.com/amiFamily: al2023
 
 # Enable GPU Feature Discovery (default: false)
 gfd:
@@ -11,6 +11,50 @@ gfd:
 
 # Configure Node Feature Discovery components
 nfd:
+  master:
+    config:
+      extraLabelNs:
+      - "ai.eks.amazonaws.com"
+      - "vpc.amazonaws.com"
+      - "nvidia.com"
   worker:
     tolerations:
       - operator: "Exists"
+    config:
+      core:
+        labelSources: ["all"]
+      sources:
+        custom:
+          - name: "label amiFamily for al2023"
+            labels:
+              "ai.eks.amazonaws.com/amiFamily": "al2023"
+            matchFeatures:
+              - feature: system.osRelease
+                matchExpressions:
+                  ID: {op: In, value: ["amzn"]}
+                  VERSION_ID: {op: In, value: ["2023"]}
+          - name: "label amiFamily for bottlerocket"
+            labels:
+              "ai.eks.amazonaws.com/amiFamily": "bottlerocket"
+            matchFeatures:
+              - feature: system.osRelease
+                matchExpressions:
+                  ID: {op: In, value: ["bottlerocket"]}
+          - name: "label nvidia for bottlerocket"
+            labels:
+              nvidia.com/gpu.present: "true"
+            matchFeatures:
+              - feature: system.osRelease
+                matchExpressions:
+                  ID: {op: In, value: ["bottlerocket"]}
+              - feature: pci.device
+                matchExpressions:
+                  vendor: {op: In, value: ["10de"]}
+          - name: "aws-efa"
+            labels:
+              "vpc.amazonaws.com/efa.present": "true"
+            matchFeatures:
+              - feature: pci.device
+                matchExpressions:
+                  vendor: {op: In, value: ["1d0f"]}
+                  device: {op: InRegexp, value: ["^efa"]}
