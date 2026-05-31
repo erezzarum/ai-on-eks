@@ -24,7 +24,8 @@ userData: |
   Content-Type: multipart/mixed; boundary="//"
 
   --//
-%{ if enable_soci_snapshotter && !soci_snapshotter_use_instance_store ~}
+%{~ if enable_soci_snapshotter && !soci_snapshotter_use_instance_store ~}
+
   Content-Type: text/x-shellscript; charset="us-ascii"
 
   #!/bin/bash
@@ -34,7 +35,7 @@ userData: |
 
   --//
 %{~ endif ~}
-%{ if enable_soci_snapshotter }
+%{~ if enable_soci_snapshotter }
   Content-Type: application/node.eks.aws
 
   apiVersion: node.eks.aws/v1alpha1
@@ -45,8 +46,11 @@ userData: |
 %{ if !soci_snapshotter_use_instance_store ~}
     containerd:
       config: |
-        [proxy_plugins.soci.exports]
-        root = "/var/lib/soci-snapshotter"
+        [proxy_plugins."soci"]
+          type = "snapshot"
+          address = "/run/soci-snapshotter-grpc/soci-snapshotter-grpc.sock"
+        [proxy_plugins."soci".exports]
+          root = "/var/lib/soci-snapshotter"
 %{ endif ~}
   --//
 %{ endif ~}
