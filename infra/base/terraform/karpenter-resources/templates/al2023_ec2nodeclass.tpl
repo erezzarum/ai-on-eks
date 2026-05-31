@@ -1,5 +1,5 @@
 amiSelectorTerms:
-  - alias: al2023@v20260423
+  - alias: al2023@latest
 role: ${node_iam_role}
 subnetSelectorTerms:
   - tags:
