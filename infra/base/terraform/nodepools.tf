@@ -34,7 +34,6 @@ data "kubectl_path_documents" "nodepools_manifests" {
     efa_network_interfaces    = jsonencode({ for k, v in module.efa_network_interfaces : k => v.karpenter_network_interfaces_yaml })
   }
   depends_on = [
-    module.karpenter,
     helm_release.karpenter,
     aws_ec2_tag.cluster_primary_security_group
   ]
