@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.3.2"
+  required_version = ">= 1.11"
 
   required_providers {
     archive = {
@@ -28,7 +28,7 @@ terraform {
     }
     random = {
       source  = "hashicorp/random"
-      version = ">= 3.6.0" # Replace with the appropriate version of the random provider
+      version = ">= 3.6.0"
     }
   }
 }
