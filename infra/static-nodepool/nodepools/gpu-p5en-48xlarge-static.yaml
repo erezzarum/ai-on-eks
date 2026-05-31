@@ -1,0 +1,66 @@
+apiVersion: karpenter.sh/v1
+kind: NodePool
+metadata:
+  name: gpu-p5en-48xlarge-static
+spec:
+  replicas: 0
+  disruption:
+    budgets:
+      - nodes: 10%
+    consolidateAfter: 86400s
+    consolidationPolicy: WhenEmpty
+    terminationGracePeriod: 1h
+  template:
+    metadata:
+      labels:
+        ai.eks.amazonaws.com/amiFamily: al2023
+        accelerator: nvidia
+    spec:
+      expireAfter: Never
+      nodeClassRef:
+        group: karpenter.k8s.aws
+        kind: EC2NodeClass
+        name: gpu-p5en-48xlarge-static
+      requirements:
+        - key: node.kubernetes.io/instance-type
+          operator: In
+          values: ["p5en.48xlarge"]
+        - key: karpenter.sh/capacity-type
+          operator: In
+          values:
+            - spot
+            - on-demand
+      taints:
+        - effect: NoSchedule
+          key: nvidia.com/gpu
+---
+apiVersion: karpenter.k8s.aws/v1
+kind: EC2NodeClass
+metadata:
+  name: gpu-p5en-48xlarge-static
+spec:
+  amiFamily: "AL2023"
+  amiSelectorTerms:
+    - alias: al2023@latest
+  role: ${node_iam_role}
+  subnetSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: "${cluster_name}"
+        Name: "${cluster_name}-private-secondary*"
+  securityGroupSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: "${cluster_name}"
+  instanceStorePolicy: RAID0
+  blockDeviceMappings:
+    - deviceName: /dev/xvda
+      ebs:
+        volumeSize: 300Gi
+        volumeType: gp3
+        encrypted: true
+  userData: |
+    apiVersion: node.eks.aws/v1alpha1
+    kind: NodeConfig
+    spec:
+      featureGates:
+        FastImagePull: true
+  ${indent(2, lookup(jsondecode(efa_network_interfaces), "p5en.48xlarge", ""))}
