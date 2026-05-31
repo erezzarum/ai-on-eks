@@ -1,7 +1,8 @@
 locals {
   default_nodepools = {
-    gpu    = true
-    neuron = true
+    gpu                    = true
+    neuron                 = true
+    gpu-p6e-gb200-36xlarge = false
   }
 
   nodepools     = merge(local.default_nodepools, var.nodepools)
@@ -17,6 +18,24 @@ locals {
       max_user_namespaces                 = var.max_user_namespaces
     }
   )
+
+  efa_instance_types = ["p5.48xlarge", "p5e.48xlarge", "p5en.48xlarge", "p6-b200.48xlarge", "p6-b300.48xlarge", "p6e-gb200.36xlarge"]
+}
+
+###############################################################################
+# EFA Network Interfaces
+#
+# Generates network interface specifications for each EFA-capable instance type.
+# Outputs are keyed by instance type (e.g., module.efa_network_interfaces["p5.48xlarge"]).
+###############################################################################
+
+module "efa_network_interfaces" {
+  source   = "./modules/efa-networkinterfaces-generator"
+  for_each = { for inst in local.efa_instance_types : inst => inst }
+
+  instance_type      = each.value
+  use_case           = 2
+  security_group_ids = [module.eks.cluster_primary_security_group_id]
 }
 
 ################################################################################
@@ -30,10 +49,12 @@ data "kubectl_path_documents" "nodepools_manifests" {
     cluster_security_group_id = module.eks.cluster_primary_security_group_id
     ami_family                = var.ami_family
     ec2nodeclass              = local.ec2nodeclass
+    efa_network_interfaces    = jsonencode({ for k, v in module.efa_network_interfaces : k => v.karpenter_network_interfaces_yaml })
   }
   depends_on = [
     module.eks,
     module.karpenter,
+    module.efa_network_interfaces,
     helm_release.karpenter,
     aws_ec2_tag.cluster_primary_security_group
   ]
@@ -49,6 +70,7 @@ data "kubectl_path_documents" "nodepools_manifests_dummy" {
     cluster_security_group_id = ""
     ami_family                = ""
     ec2nodeclass              = ""
+    efa_network_interfaces    = jsonencode({ for inst in local.efa_instance_types : inst => "" })
   }
 }
 

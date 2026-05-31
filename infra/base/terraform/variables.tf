@@ -783,7 +783,8 @@ variable "nodepools" {
   description = "Map of nodepool names to enable/disable"
   type        = map(bool)
   default = {
-    gpu    = true
-    neuron = true
+    gpu                    = true
+    neuron                 = true
+    gpu-p6e-gb200-36xlarge = false
   }
 }
