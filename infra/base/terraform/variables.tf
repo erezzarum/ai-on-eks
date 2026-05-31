@@ -157,6 +157,11 @@ variable "enable_aws_efa_k8s_device_plugin" {
   type        = bool
   default     = false
 }
+variable "efa_network_interfaces_policy" {
+  description = "EFA network interfaces policy (1 = IP Optimized, 2 = Bandwidth Optimized)"
+  type        = number
+  default     = 1
+}
 variable "aws_efa_k8s_device_plugin_version" {
   description = "AWS EFA K8s Device Plugin chart version"
   type        = string
@@ -668,7 +673,7 @@ variable "dynamo_platform_namespace" {
 variable "enable_soci_snapshotter" {
   description = "Enable SOCI snapshotter parallel pull/unpack mode"
   type        = bool
-  default     = false
+  default     = true
 }
 
 # SOCI snapshotter root dir bind to instance store

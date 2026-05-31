@@ -18,24 +18,6 @@ locals {
       max_user_namespaces                 = var.max_user_namespaces
     }
   )
-
-  efa_instance_types = ["p5.48xlarge", "p5e.48xlarge", "p5en.48xlarge", "p6-b200.48xlarge", "p6-b300.48xlarge", "p6e-gb200.36xlarge"]
-}
-
-###############################################################################
-# EFA Network Interfaces
-#
-# Generates network interface specifications for each EFA-capable instance type.
-# Outputs are keyed by instance type (e.g., module.efa_network_interfaces["p5.48xlarge"]).
-###############################################################################
-
-module "efa_network_interfaces" {
-  source   = "./modules/efa-networkinterfaces-generator"
-  for_each = { for inst in local.efa_instance_types : inst => inst }
-
-  instance_type      = each.value
-  use_case           = 2
-  security_group_ids = [module.eks.cluster_primary_security_group_id]
 }
 
 ################################################################################

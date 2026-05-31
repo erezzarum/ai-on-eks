@@ -97,6 +97,23 @@ locals {
     for name, config in local.base_addons :
     name => merge(config, lookup(local.addon_overrides, name, {}))
   }
+
+  efa_instance_types = ["p5.48xlarge", "p5e.48xlarge", "p5en.48xlarge", "p6-b200.48xlarge", "p6-b300.48xlarge", "p6e-gb200.36xlarge"]
+}
+
+###############################################################################
+# EFA Network Interfaces
+#
+# Generates network interface specifications for each EFA-capable instance type.
+# Outputs are keyed by instance type (e.g., module.efa_network_interfaces["p5.48xlarge"]).
+###############################################################################
+
+module "efa_network_interfaces" {
+  source   = "./modules/efa-networkinterfaces-generator"
+  for_each = { for inst in local.efa_instance_types : inst => inst }
+
+  instance_type = each.value
+  use_case      = var.efa_network_interfaces_policy
 }
 
 #---------------------------------------------------------------
