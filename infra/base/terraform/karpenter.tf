@@ -57,6 +57,7 @@ resource "helm_release" "karpenter" {
       interruptionQueue: ${module.karpenter[0].queue_name}
       featureGates:
         staticCapacity: true
+        spotToSpotConsolidation: true
     tolerations:
       - key: CriticalAddonsOnly
         operator: Exists
