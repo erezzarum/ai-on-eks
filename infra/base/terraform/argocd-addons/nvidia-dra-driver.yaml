@@ -1,15 +1,15 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: nvidia-dra-driver-gpu
+  name: dra-driver-nvidia-gpu
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   source:
-    repoURL: https://helm.ngc.nvidia.com/nvidia
-    chart: nvidia-dra-driver-gpu
+    repoURL: registry.k8s.io/dra-driver-nvidia/charts
+    chart: dra-driver-nvidia-gpu
     targetRevision: ${version}
     helm:
       apiVersions:
@@ -18,7 +18,7 @@ spec:
         ${user_values_yaml}
   destination:
     server: https://kubernetes.default.svc
-    namespace: nvidia-dra-driver-gpu
+    namespace: dra-driver-nvidia-gpu
   syncPolicy:
     syncOptions:
       - ServerSideApply=true

@@ -431,7 +431,7 @@ variable "enable_nvidia_dra_driver" {
 variable "nvidia_dra_driver_version" {
   description = "NVIDIA DRA Driver version"
   type        = string
-  default     = "25.12.0"
+  default     = "0.4.0"
 }
 
 variable "enable_nvidia_gpu_operator" {
