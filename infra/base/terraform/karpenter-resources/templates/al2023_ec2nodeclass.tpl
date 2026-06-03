@@ -19,38 +19,17 @@ blockDeviceMappings:
       iops: 16000
       throughput: 1000
 %{ endif ~}
+%{ if enable_soci_snapshotter ~}
 userData: |
-  MIME-Version: 1.0
-  Content-Type: multipart/mixed; boundary="//"
-
-  --//
-%{~ if enable_soci_snapshotter && !soci_snapshotter_use_instance_store ~}
-
-  Content-Type: text/x-shellscript; charset="us-ascii"
-
-  #!/bin/bash
-  mkdir /var/lib/soci-snapshotter
-  sed -i "s|ExecStart=/usr/bin/soci-snapshotter-grpc|ExecStart=/usr/bin/soci-snapshotter-grpc --root /var/lib/soci-snapshotter|" /etc/systemd/system/soci-snapshotter.service
-  systemctl daemon-reload
-
-  --//
-%{~ endif ~}
-%{~ if enable_soci_snapshotter }
-  Content-Type: application/node.eks.aws
-
   apiVersion: node.eks.aws/v1alpha1
   kind: NodeConfig
   spec:
     featureGates:
       FastImagePull: true
 %{ if !soci_snapshotter_use_instance_store ~}
-    containerd:
-      config: |
-        [proxy_plugins."soci"]
-          type = "snapshot"
-          address = "/run/soci-snapshotter-grpc/soci-snapshotter-grpc.sock"
-        [proxy_plugins."soci".exports]
-          root = "/var/lib/soci-snapshotter"
+    instance:
+      localStorage:
+        disabledMounts:
+          - SOCI
 %{ endif ~}
-  --//
 %{ endif ~}
