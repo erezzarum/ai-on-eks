@@ -42,9 +42,9 @@ variable "vpc_cidr" {
 }
 
 variable "availability_zones_count" {
-  description = "Number of availability zones to use for the deployment"
+  description = "Number of availability zones to use for the deployment. If region has fewer availability zones than the selected number, the region's max count will be used. "
   type        = number
-  default     = 2
+  default     = 6
   validation {
     condition     = var.availability_zones_count >= 2 && var.availability_zones_count <= 6
     error_message = "The availability_zones_count must be between 2 and 6."

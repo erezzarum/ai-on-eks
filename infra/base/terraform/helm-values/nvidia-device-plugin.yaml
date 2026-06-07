@@ -40,13 +40,10 @@ nfd:
               - feature: system.osRelease
                 matchExpressions:
                   ID: {op: In, value: ["bottlerocket"]}
-          - name: "label nvidia for bottlerocket"
+          - name: "nvidia labels"
             labels:
               nvidia.com/gpu.present: "true"
             matchFeatures:
-              - feature: system.osRelease
-                matchExpressions:
-                  ID: {op: In, value: ["bottlerocket"]}
               - feature: pci.device
                 matchExpressions:
                   vendor: {op: In, value: ["10de"]}
