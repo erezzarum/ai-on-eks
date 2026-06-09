@@ -5,6 +5,7 @@ kind: NodePool
 metadata:
   name: gpu-${replace(instance_type, ".", "-")}
 spec:
+  weight: 10
   disruption:
     budgets:
       - nodes: 10%

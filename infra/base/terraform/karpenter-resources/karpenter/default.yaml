@@ -3,6 +3,7 @@ kind: NodePool
 metadata:
   name: general-purpose
 spec:
+  weight: 10
   disruption:
     budgets:
       - nodes: 10%
@@ -43,6 +44,7 @@ spec:
             - spot
             - on-demand
       terminationGracePeriod: 24h
+
 ---
 apiVersion: karpenter.k8s.aws/v1
 kind: EC2NodeClass

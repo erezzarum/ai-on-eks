@@ -4,6 +4,7 @@ kind: NodePool
 metadata:
   name: general-purpose
 spec:
+  weight: 10
   disruption:
     budgets:
       - nodes: 10%
