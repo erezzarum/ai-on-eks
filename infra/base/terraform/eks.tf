@@ -34,15 +34,50 @@ locals {
   # Extended configurations used for specific addons with custom settings
   addon_overrides = merge(
     {
-      vpc-cni = {
-        most_recent    = true
-        before_compute = true
-      }
+      vpc-cni = merge(
+        {
+          most_recent    = true
+          before_compute = true
+        },
+        length(var.vpc_cni_configuration) > 0 ? {
+          configuration_values = jsonencode(var.vpc_cni_configuration)
+        } : {}
+      )
 
       eks-pod-identity-agent = {
         before_compute = true
       }
+
+      eks-node-monitoring-agent = {
+        most_recent                 = true
+        resolve_conflicts_on_create = "OVERWRITE"
+        resolve_conflicts_on_update = "PRESERVE"
+        configuration_values = jsonencode({
+          "dcgmAgent" : {
+            "tolerations" : [
+              {
+                key      = "nvidia.com/gpu",
+                operator = "Exists",
+                effect   = "NoSchedule"
+              }
+            ]
+          }
+        })
+      }
+
+      coredns = {
+        preserve = false
+      }
+
+      aws-ebs-csi-driver = {
+        preserve = false
+      }
+
+      metrics-server = {
+        preserve = false
+      }
     },
+
     try(var.enable_cluster_addons["amazon-cloudwatch-observability"], false) ? {
       amazon-cloudwatch-observability = {
         preserve                    = false
@@ -62,6 +97,23 @@ locals {
     for name, config in local.base_addons :
     name => merge(config, lookup(local.addon_overrides, name, {}))
   }
+
+  efa_instance_types = ["p5.48xlarge", "p5e.48xlarge", "p5en.48xlarge", "p6-b200.48xlarge", "p6-b300.48xlarge", "p6e-gb200.36xlarge"]
+}
+
+###############################################################################
+# EFA Network Interfaces
+#
+# Generates network interface specifications for each EFA-capable instance type.
+# Outputs are keyed by instance type (e.g., module.efa_network_interfaces["p5.48xlarge"]).
+###############################################################################
+
+module "efa_network_interfaces" {
+  source   = "./modules/efa-networkinterfaces-generator"
+  for_each = { for inst in local.efa_instance_types : inst => inst }
+
+  instance_type = each.value
+  use_case      = var.efa_network_interfaces_policy
 }
 
 #---------------------------------------------------------------
@@ -367,7 +419,7 @@ resource "kubernetes_annotations" "disable_gp2" {
   depends_on = [module.eks.eks_cluster_id]
 }
 
-resource "kubernetes_storage_class" "default_gp3" {
+resource "kubernetes_storage_class_v1" "default_gp3" {
   metadata {
     name = "gp3"
     annotations = {
@@ -412,41 +464,6 @@ resource "aws_eks_access_policy_association" "automode_node" {
   principal_arn = module.eks.node_iam_role_arn
 }
 
-################################################################################
-# EKS Auto Mode default NodePools & NodeClass
-################################################################################
-data "kubectl_path_documents" "automode_manifests" {
-  count   = var.enable_eks_auto_mode ? 1 : 0
-  pattern = "${path.module}/karpenter-resources/auto-mode/*.yaml"
-  vars = {
-    role                      = module.eks.node_iam_role_name
-    cluster_name              = module.eks.cluster_name
-    cluster_security_group_id = module.eks.cluster_primary_security_group_id
-    ami_family                = var.ami_family
-  }
-  depends_on = [
-    module.eks
-  ]
-}
-
-# workaround terraform issue with attributes that cannot be determined ahead because of module dependencies
-# https://github.com/gavinbunney/terraform-provider-kubectl/issues/58
-data "kubectl_path_documents" "automode_manifests_dummy" {
-  count   = var.enable_eks_auto_mode ? 1 : 0
-  pattern = "${path.module}/karpenter-resources/auto-mode/*.yaml"
-  vars = {
-    role                      = ""
-    cluster_name              = ""
-    cluster_security_group_id = ""
-    ami_family                = ""
-  }
-}
-
-resource "kubectl_manifest" "automode_manifests" {
-  count     = var.enable_eks_auto_mode ? length(data.kubectl_path_documents.automode_manifests_dummy[0].documents) : 0
-  yaml_body = element(data.kubectl_path_documents.automode_manifests[0].documents, count.index)
-  wait      = true
-}
 ################################################################################
 # EKS Auto Mode Ingress
 ################################################################################
@@ -507,5 +524,5 @@ resource "aws_eks_addon" "auto_mode_after_compute" {
   }
 
   resolve_conflicts_on_update = "PRESERVE"
-  depends_on                  = [kubectl_manifest.automode_manifests]
+  depends_on                  = [kubectl_manifest.nodepools_manifests]
 }

@@ -1,8 +1,9 @@
 locals {
-  nvidia_dcgm_exporter_metrics = templatefile("${path.module}/monitoring/dcgm-exporter-metrics.csv", {})
+  nvidia_dcgm_exporter_metrics         = templatefile("${path.module}/monitoring/dcgm-exporter-metrics.csv", {})
+  nvidia_dcgm_exporter_service_monitor = var.nvidia_dcgm_exporter_service_monitor && var.enable_kube_prometheus_stack
 
   nvidia_dcgm_exporter_values = yamldecode(templatefile("${path.module}/helm-values/nvidia-dcgm-exporter.yaml", {
-    dcgm_exporter_service_monitor_enabled = var.nvidia_dcgm_exporter_service_monitor
+    dcgm_exporter_service_monitor_enabled = local.nvidia_dcgm_exporter_service_monitor
     dcgm_exporter_metrics                 = local.nvidia_dcgm_exporter_metrics
   }))
 }

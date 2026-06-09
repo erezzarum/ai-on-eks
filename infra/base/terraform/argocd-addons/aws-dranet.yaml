@@ -1,15 +1,15 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: dranet-driver
+  name: aws-dranet
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   source:
-    repoURL: https://github.com/kubernetes-sigs/dranet.git
-    path: deployments/helm/dranet
+    repoURL: https://aws.github.io/eks-charts
+    chart: aws-dranet
     targetRevision: ${version}
     helm:
       values: |

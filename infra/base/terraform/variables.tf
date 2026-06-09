@@ -42,9 +42,9 @@ variable "vpc_cidr" {
 }
 
 variable "availability_zones_count" {
-  description = "Number of availability zones to use for the deployment"
+  description = "Number of availability zones to use for the deployment. If region has fewer availability zones than the selected number, the region's max count will be used. "
   type        = number
-  default     = 2
+  default     = 6
   validation {
     condition     = var.availability_zones_count >= 2 && var.availability_zones_count <= 6
     error_message = "The availability_zones_count must be between 2 and 6."
@@ -131,8 +131,14 @@ DESC
     eks-pod-identity-agent          = true
     metrics-server                  = true
     eks-node-monitoring-agent       = true
-    amazon-cloudwatch-observability = true
+    amazon-cloudwatch-observability = false
   }
+}
+
+variable "vpc_cni_configuration" {
+  description = "Configuration values for the VPC CNI addon (e.g., ENABLE_PREFIX_DELEGATION, WARM_PREFIX_TARGET). Passed as-is to the addon's configuration_values via jsonencode."
+  type        = map(any)
+  default     = {}
 }
 
 # Infrastructure Variables
@@ -151,10 +157,15 @@ variable "enable_aws_efa_k8s_device_plugin" {
   type        = bool
   default     = false
 }
+variable "efa_network_interfaces_policy" {
+  description = "EFA network interfaces policy (1 = IP Optimized, 2 = Bandwidth Optimized)"
+  type        = number
+  default     = 1
+}
 variable "aws_efa_k8s_device_plugin_version" {
   description = "AWS EFA K8s Device Plugin chart version"
   type        = string
-  default     = "0.5.22"
+  default     = "0.5.26"
 }
 variable "enable_aws_neuron_device_plugin" {
   description = "Enable AWS Neuron Device Plugin"
@@ -165,6 +176,11 @@ variable "aws_neuron_device_plugin_version" {
   description = "AWS Neuron Device Plugin chart version"
   type        = string
   default     = "1.3.0"
+}
+variable "enable_aws_neuron_monitor" {
+  description = "Enable AWS Neuron Monitor"
+  type        = bool
+  default     = true
 }
 variable "enable_aws_fsx_csi_driver" {
   description = "Whether or not to deploy the Fsx Driver"
@@ -415,7 +431,7 @@ variable "enable_nvidia_dra_driver" {
 variable "nvidia_dra_driver_version" {
   description = "NVIDIA DRA Driver version"
   type        = string
-  default     = "25.12.0"
+  default     = "0.4.0"
 }
 
 variable "enable_nvidia_gpu_operator" {
@@ -443,6 +459,11 @@ variable "nvidia_gpu_operator_version" {
 }
 variable "enable_nvidia_gpu_operator_dcgm_exporter" {
   description = "Enable DCGM Exporter within NVIDIA GPU Operator"
+  type        = bool
+  default     = true
+}
+variable "enable_nvidia_gpu_operator_mig_manager" {
+  description = "Enable MIG Manager within NVIDIA GPU Operator"
   type        = bool
   default     = true
 }
@@ -652,17 +673,17 @@ variable "dynamo_platform_namespace" {
 variable "enable_soci_snapshotter" {
   description = "Enable SOCI snapshotter parallel pull/unpack mode"
   type        = bool
-  default     = false
+  default     = true
 }
 
 # SOCI snapshotter root dir bind to instance store
 variable "soci_snapshotter_use_instance_store" {
   description = <<-EOF
-    When disabled (default) - Configure the EBS volume used by Bottlerocket's container resources to be fully optimized: IOPs: 16K, Throughput: 1000MiB/s
-    When enabled - Configure SOCI snapshotter root dir to bind to ephemeral storage / instance store"
+    When disabled - Configure the EBS volume used for container resources to be fully optimized: IOPs: 16K, Throughput: 1000MiB/s
+    When enabled (default) - Configure SOCI snapshotter root dir to bind to ephemeral storage / instance store"
   EOF
   type        = bool
-  default     = false
+  default     = true
 }
 
 # Configure kernel max_user_namespaces
@@ -688,12 +709,6 @@ variable "karpenter_version" {
   description = "Karpenter version"
   type        = string
   default     = "1.11.0"
-}
-
-variable "karpenter_additional_ec2nodeclassnames" {
-  description = "Additional EC2 NodeClass Names"
-  type        = list(string)
-  default     = []
 }
 
 # S3 Model Storage Variables
@@ -768,7 +783,7 @@ variable "enable_gateway_api_inference_crds" {
 variable "gateway_api_inference_crds_version" {
   description = "Gateway API Inference Extension CRDs version"
   type        = string
-  default     = "1.4.0"
+  default     = "1.5.0"
 }
 
 # AgentGateway
@@ -797,24 +812,23 @@ variable "istio_version" {
   default     = "1.29.1"
 }
 
-variable "enable_dranet_driver" {
-  description = "Enable DRANET driver addon"
+variable "enable_aws_dranet" {
+  description = "Enable AWS DRANET driver addon"
   type        = bool
   default     = false
 }
-variable "dranet_driver_version" {
-  description = "DRANET driver version"
+variable "aws_dranet_version" {
+  description = "AWS DRANET driver version"
   type        = string
-  default     = "main"
+  default     = "1.0.0"
 }
-variable "dranet_driver_image" {
-  description = "DRANET driver image"
-  type = object({
-    repository = string
-    tag        = string
-  })
+
+variable "nodepools" {
+  description = "Map of nodepool names to enable/disable"
+  type        = map(bool)
   default = {
-    repository = "registry.k8s.io/networking/dranet"
-    tag        = "stable"
+    gpu                    = true
+    neuron                 = true
+    gpu-p6e-gb200-36xlarge = false
   }
 }

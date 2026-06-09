@@ -4,13 +4,16 @@ kind: NodePool
 metadata:
   name: general-purpose
 spec:
+  weight: 10
   disruption:
     budgets:
       - nodes: 10%
     consolidateAfter: 30s
     consolidationPolicy: WhenEmptyOrUnderutilized
   template:
-    metadata: {}
+    metadata:
+      labels:
+        ai.eks.amazonaws.com/amiFamily: ${ami_family}
     spec:
       expireAfter: 336h
       nodeClassRef:
@@ -53,7 +56,9 @@ spec:
     consolidateAfter: 30s
     consolidationPolicy: WhenEmptyOrUnderutilized
   template:
-    metadata: {}
+    metadata:
+      labels:
+        amiFamily: ${ami_family}
     spec:
       expireAfter: 336h
       nodeClassRef:
@@ -100,7 +105,7 @@ spec:
     throughput: 125
   networkPolicy: DefaultAllow
   networkPolicyEventLogs: Disabled
-  role: ${role}
+  role: ${node_iam_role}
   securityGroupSelectorTerms:
     - id: ${cluster_security_group_id}
   snatPolicy: Random

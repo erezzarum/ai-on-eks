@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.3.2"
+  required_version = ">= 1.11"
 
   required_providers {
     archive = {
@@ -23,12 +23,12 @@ terraform {
       version = ">=3.5.0"
     }
     kubectl = {
-      source  = "gavinbunney/kubectl"
-      version = ">= 1.14"
+      source  = "alekc/kubectl"
+      version = "~> 2.4"
     }
     random = {
       source  = "hashicorp/random"
-      version = ">= 3.6.0" # Replace with the appropriate version of the random provider
+      version = ">= 3.6.0"
     }
   }
 }

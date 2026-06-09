@@ -3,15 +3,16 @@ kind: NodePool
 metadata:
   name: neuron
 spec:
+  weight: 10
   disruption:
     budgets:
       - nodes: 10%
-    consolidateAfter: 30s
+    consolidateAfter: 300s
     consolidationPolicy: WhenEmptyOrUnderutilized
   template:
     metadata:
       labels:
-        amiFamily: ${ami_family}
+        ai.eks.amazonaws.com/amiFamily: ${ami_family}
         accelerator: neuron
     spec:
       expireAfter: 336h
@@ -20,21 +21,21 @@ spec:
         kind: NodeClass
         name: neuron
       requirements:
-        - key: karpenter.sh/capacity-type
-          operator: In
-          values:
-            - on-demand
         - key: eks.amazonaws.com/instance-family
           operator: In
           values:
             - inf2
             - trn1
             - trn2
+        - key: karpenter.sh/capacity-type
+          operator: In
+          values:
+            - spot
+            - on-demand
       taints:
         - effect: NoSchedule
           key: aws.amazon.com/neuron
-          value: Exists
-      terminationGracePeriod: 24h0m0s
+      terminationGracePeriod: 24h
 ---
 apiVersion: eks.amazonaws.com/v1
 kind: NodeClass
@@ -47,7 +48,7 @@ spec:
     throughput: 125
   networkPolicy: DefaultAllow
   networkPolicyEventLogs: Disabled
-  role: ${role}
+  role: ${node_iam_role}
   securityGroupSelectorTerms:
     - id: ${cluster_security_group_id}
   snatPolicy: Random

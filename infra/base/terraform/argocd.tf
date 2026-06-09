@@ -28,8 +28,7 @@ resource "helm_release" "argocd" {
 
   depends_on = [
     module.eks.cluster_id,
-    kubectl_manifest.nodepool,
-    aws_eks_addon.aws_ebs_csi_driver,
-    kubectl_manifest.automode_manifests
+    kubectl_manifest.nodepools_manifests,
+    aws_eks_addon.aws_ebs_csi_driver
   ]
 }

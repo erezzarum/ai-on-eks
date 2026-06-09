@@ -8,10 +8,7 @@ subnetSelectorTerms:
 securityGroupSelectorTerms:
   - tags:
       karpenter.sh/discovery: "${cluster_name}"
-%{ if enable_soci_snapshotter && !soci_snapshotter_use_instance_store ~}
-instanceStorePolicy: RAID0
-%{ endif ~}
-%{ if !enable_soci_snapshotter ~}
+%{ if !enable_soci_snapshotter || soci_snapshotter_use_instance_store ~}
 instanceStorePolicy: RAID0
 %{ endif ~}
 blockDeviceMappings:
@@ -45,11 +42,11 @@ userData: |
   concurrent-download-chunk-size = "16mb"
   max-concurrent-unpacks-per-image = 10
   discard-unpacked-layers = true
-%{ if soci_snapshotter_use_instance_store ~}
+%{ if !soci_snapshotter_use_instance_store ~}
   [settings.bootstrap-commands.k8s-ephemeral-storage]
   commands = [
       ["apiclient", "ephemeral-storage", "init"],
-      ["apiclient", "ephemeral-storage" ,"bind", "--dirs", "/var/lib/containerd", "/var/lib/kubelet", "/var/log/pods", "/var/lib/soci-snapshotter"]
+      ["apiclient", "ephemeral-storage" ,"bind", "--dirs", "/var/lib/containerd", "/var/lib/kubelet", "/var/log/pods"]
   ]
   essential = true
   mode = "always"

@@ -20,7 +20,7 @@ locals {
 #-----------------------------------------------------------------------------------------
 # JupyterHub Single User Pod Identity Policy, maybe that block could be incorporated in add-on registry
 #-----------------------------------------------------------------------------------------
-resource "kubernetes_namespace" "jupyterhub" {
+resource "kubernetes_namespace_v1" "jupyterhub" {
   count = var.enable_jupyterhub ? 1 : 0
   metadata {
     name = "jupyterhub"
@@ -52,7 +52,7 @@ resource "kubernetes_service_account_v1" "jupyterhub_single_user_sa" {
   count = var.enable_jupyterhub ? 1 : 0
   metadata {
     name      = local.jupyter_single_user_sa_name
-    namespace = kubernetes_namespace.jupyterhub[count.index].metadata[0].name
+    namespace = kubernetes_namespace_v1.jupyterhub[count.index].metadata[0].name
   }
 }
 
@@ -119,7 +119,7 @@ resource "kubernetes_persistent_volume_v1" "efs_persist" {
     }
   }
   depends_on = [
-    kubernetes_namespace.jupyterhub,
+    kubernetes_namespace_v1.jupyterhub,
     module.efs
   ]
 }
@@ -145,7 +145,7 @@ resource "kubernetes_persistent_volume_v1" "efs_shared" {
     }
   }
   depends_on = [
-    kubernetes_namespace.jupyterhub,
+    kubernetes_namespace_v1.jupyterhub,
     module.efs
   ]
 }
@@ -207,7 +207,7 @@ resource "kubernetes_secret_v1" "huggingface_token" {
   count = var.enable_jupyterhub ? 1 : 0
   metadata {
     name      = "hf-token"
-    namespace = kubernetes_namespace.jupyterhub[count.index].metadata[0].name
+    namespace = kubernetes_namespace_v1.jupyterhub[count.index].metadata[0].name
   }
 
   data = {
@@ -219,7 +219,7 @@ resource "kubernetes_config_map_v1" "notebook" {
   count = var.enable_jupyterhub ? 1 : 0
   metadata {
     name      = "notebook"
-    namespace = kubernetes_namespace.jupyterhub[count.index].metadata[0].name
+    namespace = kubernetes_namespace_v1.jupyterhub[count.index].metadata[0].name
   }
 }
 

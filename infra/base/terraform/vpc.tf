@@ -19,13 +19,17 @@ data "aws_availability_zones" "available_lz" {
 }
 
 locals {
-  region    = var.region
-  local_azs = slice(data.aws_availability_zones.available_lz.names, 0, var.local_zones_count)
-  az_azs    = slice(data.aws_availability_zones.available.names, 0, var.availability_zones_count)
+  region = var.region
+
+  local_zones_count = min(var.local_zones_count, length(data.aws_availability_zones.available_lz.names))
+  local_azs         = slice(data.aws_availability_zones.available_lz.names, 0, local.local_zones_count)
+
+  availability_zones_count = min(var.availability_zones_count, length(data.aws_availability_zones.available.names))
+  az_azs                   = slice(data.aws_availability_zones.available.names, 0, local.availability_zones_count)
 
   # concat to put local zones at the end of the list to avoid creation on NAT Gateway
   azs       = concat(local.az_azs, local.local_azs)
-  azs_count = var.availability_zones_count + var.local_zones_count
+  azs_count = local.availability_zones_count + local.local_zones_count
 
   vpc_cidr        = var.vpc_cidr
   vpc_cidr_prefix = tonumber(split("/", local.vpc_cidr)[1])
@@ -52,6 +56,8 @@ locals {
       k % local.secondary_subnets_per_cidr
     )
   ]
+
+  secondary_subnets_by_az = { for k, v in zipmap(local.azs, slice(module.vpc.private_subnets, length(module.vpc.private_subnets) - local.azs_count, length(module.vpc.private_subnets))) : k => v }
 }
 
 module "subnets" {
