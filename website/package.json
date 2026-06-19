@@ -19,7 +19,7 @@
     "dev": "docusaurus start"
   },
   "dependencies": {
-    "@babel/core": "^7.22.1",
+    "@babel/core": "^7.29.6",
     "@babel/plugin-syntax-jsx": "^7.22.5",
     "@babel/preset-react": "^7.22.5",
     "@docusaurus/core": "^3.9.0",
@@ -50,7 +50,7 @@
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
     "front-matter-loader": "^2.0.0",
-    "js-yaml": "^4.1.1",
+    "js-yaml": "^4.2.0",
     "prettier": "^3.1.1",
     "remark-frontmatter": "^5.0.0",
     "stylelint": "^16.0.2"
