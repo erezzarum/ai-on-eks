@@ -34,7 +34,6 @@ data "kubectl_path_documents" "nodepools_manifests" {
     efa_network_interfaces    = jsonencode({ for k, v in module.efa_network_interfaces : k => v.karpenter_network_interfaces_yaml })
   }
   depends_on = [
-    helm_release.karpenter,
     aws_ec2_tag.cluster_primary_security_group
   ]
 }
@@ -53,6 +52,17 @@ data "kubectl_path_documents" "nodepools_manifests_dummy" {
   }
 }
 
+# ensures Karpenter exist before applying NodePool manifests,
+# but ignore_changes prevents updates to Karpenter from cascading as updates for NodePools manifests.
+resource "terraform_data" "karpenter" {
+  count = var.enable_eks_auto_mode ? 0 : 1
+  input = helm_release.karpenter[0].id
+
+  lifecycle {
+    ignore_changes = [input]
+  }
+}
+
 resource "kubectl_manifest" "nodepools_manifests" {
   for_each = {
     for key, value in data.kubectl_path_documents.nodepools_manifests_dummy.manifests :
@@ -61,4 +71,8 @@ resource "kubectl_manifest" "nodepools_manifests" {
 
   yaml_body = data.kubectl_path_documents.nodepools_manifests.manifests[each.key]
   wait      = true
+
+  depends_on = [
+    terraform_data.karpenter
+  ]
 }
