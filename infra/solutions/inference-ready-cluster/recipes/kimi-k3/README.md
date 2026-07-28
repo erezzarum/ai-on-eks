@@ -12,13 +12,7 @@ Deploy [Moonshot AI's Kimi K3](https://huggingface.co/moonshotai/Kimi-K3) on Ama
 ## Capacity Requirements
 
 This recipe of Kimi K3 requires **1 x p6-b300 instance** (8 x B300 GPUs) for inference.
-We recommend using [EC2 Capacity Blocks](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-capacity-blocks.html) to guarantee availability for your deployment window. When purchasing a Capacity Block, tag the reservation with `ai-on-eks=true` — Karpenter's GPU NodePool is configured to discover and launch instances into Capacity Blocks matching this tag, ensuring your reserved capacity is automatically utilized when pods are scheduled.
-
-
-The deployment workflow:
-1. **Download** — Model weights are downloaded from Hugging Face to an S3 bucket via a high-throughput copy job (NVMe-backed for speed)
-2. **Stream** — vLLM loads model weights directly from S3 using the RunAI Model Streamer, enabling distributed loading without full local storage
-3. **Serve** — vLLM serves the model on GPU nodes provisioned by Karpenter
+We recommend using [EC2 Capacity Blocks](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-capacity-blocks.html) to guarantee availability for your deployment window. When purchasing a Capacity Block, **tag the reservation with `ai-on-eks=true`** — Karpenter's GPU NodePool is configured to discover and launch instances into Capacity Blocks matching this tag, ensuring your reserved capacity is automatically utilized when pods are scheduled.
 
 ---
 
