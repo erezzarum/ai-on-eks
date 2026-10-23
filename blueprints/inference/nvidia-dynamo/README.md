@@ -11,6 +11,10 @@ The workflow has three phases:
 
 All commands below assume you are running from this directory (`blueprints/inference/nvidia-dynamo`), since the relative paths to the Terraform stack (`../../../infra/nvidia-dynamo`) are resolved from here.
 
+## Capacity Requirements
+
+We recommend using [EC2 Capacity Blocks](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-capacity-blocks.html) to guarantee availability for your deployment window. When purchasing a Capacity Block, **tag the reservation with `ai-on-eks=true`** — Karpenter's GPU NodePool is configured to discover and launch instances into Capacity Blocks matching this tag, ensuring your reserved capacity is automatically utilized when pods are scheduled.
+
 ## Deploy Infrastructure
 
 Provision the EKS cluster and the Dynamo platform. The `install.sh` script copies the shared Terraform base into a local `_LOCAL` workspace, bootstraps the backend, and runs `terraform apply`. \
